@@ -1,0 +1,417 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease; /* Smooth transitions */
+}
+
+.app {
+    min-height: 100vh;
+}
+
+.header {
+    background: linear-gradient(135deg, #00b4d8 0%, #0077be 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInDown 1s ease-out; /* Header animation */
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.logo {
+    font-size: 2.5em;
+    margin-right: 15px;
+    color: #fff; /* Ensure icon color */
+}
+
+.header h1 {
+    margin: 0 0 5px 0;
+    font-size: 2.2em;
+}
+
+.header p {
+    margin: 0 0 5px 0;
+    opacity: 0.9;
+}
+
+.main-container {
+    display: flex;
+    max-width: 1400px;
+    margin: 20px auto;
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.left-panel, .right-panel {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    max-height: 80vh;
+    overflow-y: auto;
+    transition: box-shadow 0.3s; /* Hover effect */
+}
+
+.left-panel:hover, .right-panel:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+    margin-bottom: 20px;
+}
+
+.panel-header h2 {
+    color: #0077be;
+    margin: 0 0 10px 0;
+    font-size: 1.3em;
+}
+
+.panel-header h2 i {
+    margin-right: 8px;
+}
+
+.panel-header p {
+    color: #666;
+    margin: 0;
+    font-size: 0.95em;
+}
+
+.symptom-input {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.symptom-input input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px 0 0 8px;
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+.symptom-input input:focus {
+    border-color: #00b4d8;
+    outline: none;
+}
+
+.symptom-input button {
+    padding: 12px 16px;
+    background-color: #00b4d8;
+    color: white;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background-color 0.3s;
+}
+
+.symptom-input button:hover {
+    background-color: #0077be;
+}
+
+.symptoms-list h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.symptom-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    transition: transform 0.3s;
+}
+
+.symptom-item:hover {
+    transform: translateX(5px);
+}
+
+.symptom-item button {
+    background-color: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+.common-symptoms h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.common-symptoms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.common-symptoms button {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    margin: 4px 0;
+    background-color: #e3f2fd;
+    border: 1px solid #00b4d8;
+    color: #0077be;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.3s;
+}
+
+.common-symptoms button i {
+    margin-right: 5px;
+}
+
+.common-symptoms button:hover:not(:disabled) {
+    background-color: #bbdefb;
+}
+
+.common-symptoms button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.analyze-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #00b4d8 0%, #0077be 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: opacity 0.3s;
+}
+
+.analyze-btn:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.analyze-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.clear-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.clear-btn:hover {
+    opacity: 0.9;
+}
+
+.no-results, .error {
+    text-align: center;
+    color: #666;
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+.error {
+    color: #ff4757;
+}
+
+.results-content h3 {
+    color: #0077be;
+    margin-bottom: 15px;
+}
+
+.conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.condition-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #00b4d8;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.condition-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.condition-card h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.condition-card .score {
+    font-weight: bold;
+    color: #0077be;
+    margin: 0;
+}
+
+.condition-card .matched {
+    margin: 5px 0 0;
+    color: #666;
+}
+
+.condition-card button {
+    width: 100%;
+    padding: 8px;
+    background: #e3f2fd;
+    border: none;
+    border-radius: 4px;
+    color: #0077be;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+}
+
+.condition-card button:hover {
+    background: #bbdefb;
+}
+
+.condition-card .details {
+    margin-top: 10px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.top-recommendation {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 2px solid #28a745;
+}
+
+.top-recommendation h2 {
+    margin: 0;
+    color: #155724;
+}
+
+.other-conditions h4 {
+    color: #0077be;
+    margin-bottom: 10px;
+}
+
+.other-conditions p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.other-condition {
+    transition: color 0.3s;
+}
+
+.other-condition:hover {
+    color: #0077be;
+}
+
+.warnings {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.warnings h4 {
+    color: #856404;
+    margin-top: 0;
+}
+
+.warnings p {
+    margin: 5px 0;
+    color: #856404;
+}
+
+.suggested-match {
+    cursor: pointer;
+    color: #0077be;
+    transition: color 0.3s;
+}
+
+.suggested-match:hover {
+    color: #00b4d8;
+    text-decoration: underline;
+}
+
+.disclaimer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff3cd;
+    border-top: 1px solid #ffeaa7;
+    padding: 15px;
+    text-align: center;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    z-index: 1000;
+}
+
+.disclaimer span {
+    font-size: 1.5em;
+    margin-right: 10px;
+}
+
+.disclaimer p {
+    margin: 0;
+    max-width: 800px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .main-container {
+        flex-direction: column;
+    }
+    
+    .header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .logo {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

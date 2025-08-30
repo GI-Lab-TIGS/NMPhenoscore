@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Prioritization Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="logo"><i class="fas fa-stethoscope"></i></div>
+            <div>
+                <h1>Disease Prioritization Tool</h1>
+                <p>Advanced symptom-based diagnosis assistant</p>
+                <p>Developed by GI lab | Generated: 26-08-2025</p>
+            </div>
+        </header>
+
+        <div class="main-container">      
+            <div class="left-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-notes-medical"></i> Enter Patient Symptoms</h2>
+                    <p>Add symptoms one by one. The system will analyze and prioritize potential conditions.</p>
+                </div>
+
+                <div class="symptom-input">
+                    <input type="text" id="symptomInput" placeholder="Type a symptom (e.g., muscle weakness, fever, headache.)" list="symptomSuggestions">
+                    <datalist id="symptomSuggestions"></datalist>
+                    <button type="button" id="addBtn"><i class="fas fa-plus"></i></button>
+                </div>
+
+                <div class="symptoms-list">
+                    <h3>Added Symptoms:</h3>
+                    <div id="addedSymptoms"></div>
+                    <button class="clear-btn" id="clearSymptoms" style="display: none;">Clear All</button>
+                </div>
+
+                <div class="common-symptoms">
+                    <h3>Quick Add Common Symptoms:</h3>
+                    <div class="common-symptoms-grid">
+                        <button type="button" data-symptom="Muscle weakness"><i class="fas fa-plus"></i> Muscle weakness</button>
+                        <button type="button" data-symptom="Progressive muscle degeneration"><i class="fas fa-plus"></i> Progressive muscle degeneration</button>
+                        <button type="button" data-symptom="Elevated creatinine phosphokinase"><i class="fas fa-plus"></i> Elevated creatinine phosphokinase</button>
+                        <button type="button" data-symptom="Scoliosis"><i class="fas fa-plus"></i> Scoliosis</button>
+                        <button type="button" data-symptom="Joint contractures"><i class="fas fa-plus"></i> Joint contractures</button>
+                        <button type="button" data-symptom="Cardiac abnormalities"><i class="fas fa-plus"></i> Cardiac abnormalities</button>
+                        <button type="button" data-symptom="Respiratory insufficiency"><i class="fas fa-plus"></i> Respiratory insufficiency</button>
+                        <button type="button" data-symptom="Developmental delay"><i class="fas fa-plus"></i> Developmental delay</button>
+                    </div>
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn" disabled>Analyze Symptoms</button>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-chart-bar"></i> Analysis Results</h2>
+                    <p>Enter symptoms to see prioritized condition matches</p>
+                </div>
+
+                <div id="results" class="no-results">
+                    <p>No analysis performed yet</p>
+                    <p>Add symptoms and click "Analyze" to get started</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <span><i class="fas fa-exclamation-triangle"></i></span>
+            <p>Medical Disclaimer: This tool is for educational purposes only. Always consult with qualified healthcare professionals for proper medical diagnosis and treatment.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
