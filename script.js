@@ -305,24 +305,6 @@ analyzeBtn.addEventListener('click', async () => {
             html += '</div>';
         }
 
-        // Use cards for conditions (more interactive)
-        html += '<div class="conditions-grid">';
-        Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
-            const matched = data.matched_symptoms[condition] || [];
-            const url = conditionUrls[condition] || null;
-            html += `
-                <div class="condition-card">
-                    <h4>${condition}</h4>
-                    <p class="score">Score: ${score} matching symptom(s)</p>
-                    <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
-                    ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
-                    <button onclick="toggleDetails(this)">Details <i class="fas fa-chevron-down"></i></button>
-                    <div class="details" style="display: none;">Additional info or links could go here.</div>
-                </div>
-            `;
-        });
-        html += '</div>';
-
         if (data.top_condition) {
             html += `<div class="top-recommendation"><h2>TOP RECOMMENDATION: ${data.top_condition}</h2>`;
             if (conditionUrls[data.top_condition]) {
@@ -345,6 +327,25 @@ analyzeBtn.addEventListener('click', async () => {
             });
             html += '</div>';
         }
+        // Use cards for conditions (more interactive)
+        html += '<div class="conditions-grid">';
+        Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
+            const matched = data.matched_symptoms[condition] || [];
+            const url = conditionUrls[condition] || null;
+            html += `
+                <div class="condition-card">
+                    <h4>${condition}</h4>
+                    <p class="score">Score: ${score} matching symptom(s)</p>
+                    <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
+                    // ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
+                    <button onclick="toggleDetails(this)">Details <i class="fas fa-chevron-down"></i></button>
+                    <div class="details" style="display: none;">"${url}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        
 
         if (Object.keys(data.prioritized_conditions || {}).length === 0) {
             html += '<p>No conditions match the provided symptoms.</p>';
