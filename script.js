@@ -167,7 +167,7 @@ const analyzeBtn = document.getElementById('analyzeBtn');
 const resultsDiv = document.getElementById('results');
 const clearBtn = document.getElementById('clearSymptoms');
 
-// Add symptom from input
+// Add symptom from input with animation
 addBtn.addEventListener('click', addSymptom);
 input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') addSymptom();
@@ -180,9 +180,9 @@ function addSymptom() {
         updateAddedList();
         input.value = '';
         updateAnalyzeBtn();
-        //Animate addition
-	const newItem = addedList.lastChild;
-	newItem.style.animation = 'fadeIn 0.5s';
+        // Animate addition
+        const newItem = addedList.lastChild;
+        newItem.style.animation = 'fadeIn 0.5s';
     }
 }
 
@@ -237,9 +237,7 @@ clearBtn.addEventListener('click', () => {
 
 function updateAnalyzeBtn() {
     analyzeBtn.disabled = symptoms.length === 0;
-}
-
-// Analyze with loading spinner
+}// Analyze with loading spinner
 analyzeBtn.addEventListener('click', async () => {
     if (!symptomConditionDf) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: Data not loaded. Please refresh the page.</p></div>`;
