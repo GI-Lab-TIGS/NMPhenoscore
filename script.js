@@ -338,9 +338,8 @@ analyzeBtn.addEventListener('click', async () => {
                     <h4>${condition}</h4>
                     <p class="score">Score: ${score} matching symptom(s)</p>
                     <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
+                    ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
                     
-                    <button onclick="toggleDetails(this)">Details <i class="fas fa-chevron-down"></i></button>
-                    <div class="details" style="display: none;">${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}</div>
                 </div>
             `;
         });
