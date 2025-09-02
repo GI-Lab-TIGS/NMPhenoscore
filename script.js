@@ -7,7 +7,6 @@ const commonSymptoms = [
 let symptomConditionDf = null;
 let allSymptoms = [];
 let symptomMapping = {};
-let conditionUrls = {};  
 
 // Function to compute LCS length
 function lcsLength(s1, s2) {
@@ -116,7 +115,6 @@ async function loadData() {
         }
         const json = await response.json();
 
-        // Load prevalence data
         symptomConditionDf = json;
         allSymptoms = json.symptoms;
         symptomMapping = {};
@@ -127,15 +125,6 @@ async function loadData() {
                 symptomMapping[key] = full;
             }
         }
-
-        // Load condition URLs JSON
-        const urlResponse = await fetch('conditions_gene_data.json');
-        if (urlResponse.ok) {
-            conditionUrls = await urlResponse.json();
-        } else {
-            console.warn('condition_urls.json not found or failed to load');
-        }
-
         console.log('Data loaded successfully');
         return true;
     } catch (e) {
@@ -237,7 +226,9 @@ clearBtn.addEventListener('click', () => {
 
 function updateAnalyzeBtn() {
     analyzeBtn.disabled = symptoms.length === 0;
-}// Analyze with loading spinner
+}
+
+// Analyze with loading spinner
 analyzeBtn.addEventListener('click', async () => {
     if (!symptomConditionDf) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: Data not loaded. Please refresh the page.</p></div>`;
@@ -309,13 +300,11 @@ analyzeBtn.addEventListener('click', async () => {
         html += '<div class="conditions-grid">';
         Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
             const matched = data.matched_symptoms[condition] || [];
-            const url = conditionUrls[condition] || null;
             html += `
                 <div class="condition-card">
                     <h4>${condition}</h4>
                     <p class="score">Score: ${score} matching symptom(s)</p>
                     <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
-                    ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
                     <button onclick="toggleDetails(this)">Details <i class="fas fa-chevron-down"></i></button>
                     <div class="details" style="display: none;">Additional info or links could go here.</div>
                 </div>
@@ -324,11 +313,7 @@ analyzeBtn.addEventListener('click', async () => {
         html += '</div>';
 
         if (data.top_condition) {
-            html += `<div class="top-recommendation"><h2>TOP RECOMMENDATION: ${data.top_condition}</h2>`;
-            if (conditionUrls[data.top_condition]) {
-                html += `<p><a href="${conditionUrls[data.top_condition]}" target="_blank" class="condition-link">Learn more about ${data.top_condition}</a></p>`;
-            }
-            html += `</div>`;
+            html += `<div class="top-recommendation"><h2>TOP RECOMMENDATION: ${data.top_condition}</h2></div>`;
         }
 
         if (Object.keys(data.prioritized_conditions || {}).length > 1) {
@@ -336,11 +321,7 @@ analyzeBtn.addEventListener('click', async () => {
             const sortedConditions = Object.entries(data.prioritized_conditions).sort((a, b) => b[1] - a[1]);
             sortedConditions.slice(1, 4).forEach(([condition, score]) => {
                 if (score > 0) {
-                    html += `<p class="other-condition">- ${condition}: ${score} matching symptoms`;
-                    if (conditionUrls[condition]) {
-                        html += ` (<a href="${conditionUrls[condition]}" target="_blank">More Info</a>)`;
-                    }
-                    html += `</p>`;
+                    html += `<p class="other-condition">- ${condition}: ${score} matching symptoms</p>`;
                 }
             });
             html += '</div>';
@@ -355,23 +336,26 @@ analyzeBtn.addEventListener('click', async () => {
 
         resultsDiv.innerHTML = `<div class="results-content">${html}</div>`;
 
-        // Sunburst Chart
+        // Improved Sunburst Chart - Highlight top recommendation with color
         let labels = ["Potential Conditions"];
         let parents = [""];
         let values = [0];
         let hovertext = ["Root node with all potential conditions"];
-        let colors = ["#f0f0f0"];
+        let colors = ["#f0f0f0"]; // Default color for root
         let totalScore = 0;
 
+        // Add all conditions
         Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
             labels.push(condition);
             parents.push("Potential Conditions");
             values.push(score);
-            hovertext.push(`Condition: ${condition}<br>Score: ${score}`);
+            hovertext.push(`Condition: ${condition}<br>Score: ${score}<br>Click to explore`);
             totalScore += score;
+            // Assign color: green for top recommendation, gray for others
             colors.push(condition === data.top_condition ? "#28a745" : "#d3d3d3");
         });
 
+        // Add symptoms only under top recommendation
         if (data.top_condition) {
             const matched = data.matched_symptoms[data.top_condition] || [];
             matched.forEach(sym => {
@@ -379,11 +363,11 @@ analyzeBtn.addEventListener('click', async () => {
                 parents.push(data.top_condition);
                 values.push(1);
                 hovertext.push(`Symptom: ${sym}<br>Contributes to ${data.top_condition}`);
-                colors.push("#28a745");
+                colors.push("#28a745"); // Match top recommendation color for consistency
             });
         }
 
-        values[0] = totalScore;
+        values[0] = totalScore; // Set root value to total for proportionality
 
         const chartData = [{
             type: "sunburst",
@@ -393,34 +377,47 @@ analyzeBtn.addEventListener('click', async () => {
             hovertext: hovertext,
             hoverinfo: "text+value+percent parent",
             branchvalues: "total",
-            marker: { line: {width: 2}, colors: colors }
+            outsidetextfont: {size: 20, color: "#377eb8"},
+            leaf: {opacity: 0.8},
+            marker: {
+                line: {width: 2},
+                colors: colors, // Custom colors to highlight top recommendation
+                cmin: 0,
+                cmax: totalScore,
+                showscale: true
+            },
+            insidetextorientation: 'radial',
+            sort: false
         }];
 
         const layout = {
             margin: {l: 0, r: 0, b: 0, t: 0},
-            hovermode: 'closest'
+            sunburstcolorway: ["#636efa", "#ef553b", "#00cc96", "#ab63fa", "#19d3f3", "#ff7f0e", "#2ca02c"],
+            extendsunburstcolors: true,
+            hovermode: 'closest',
+            clickmode: 'event+select'
         };
 
         Plotly.newPlot('sunburstChart', chartData, layout);
 
-        // Add click interactivity with URL support
+        // Add click interactivity to sunburst
         document.getElementById('sunburstChart').on('plotly_sunburstclick', function(plotData) {
             if (plotData.points && plotData.points[0]) {
                 const label = plotData.points[0].label;
-                if (conditionUrls[label]) {
-                    window.open(conditionUrls[label], '_blank');
+                if (label !== "Potential Conditions") {
+                    alert(`Selected: ${label}\nExplore more about this condition or symptom.`);
                 }
             }
         });
     } catch (error) {
-        resultsDiv.innerHTML = `<div class="error"><p>Error: ${error.message}. Ensure the data files are available.</p></div>`;
+        resultsDiv.innerHTML = `<div class="error"><p>Error: ${error.message}. Ensure the data file is available.</p></div>`;
     }
 
     analyzeBtn.disabled = false;
     analyzeBtn.innerHTML = 'Analyze Symptoms';
 });
 
-// Toggle condition details
+// Function to toggle condition details (new interactivity)
 function toggleDetails(btn) {
     const details = btn.nextElementSibling;
     details.style.display = details.style.display === 'none' ? 'block' : 'none';
@@ -429,12 +426,13 @@ function toggleDetails(btn) {
     icon.classList.toggle('fa-chevron-up');
 }
 
-// Replace invalid symptom with suggestion
+// Function to replace invalid symptom with suggestion (new interactivity)
 function replaceSymptom(invalid, simple) {
     const index = symptoms.indexOf(invalid);
     if (index > -1) {
         symptoms[index] = simple;
         updateAddedList();
+        // Trigger re-analysis optionally
         if (confirm(`Replaced '${invalid}' with '${simple}'. Re-analyze?`)) {
             analyzeBtn.click();
         }
@@ -447,7 +445,6 @@ function replaceSymptom(invalid, simple) {
     if (loaded) {
         await fetchAllSymptoms();
     } else {
-        resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
+        resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data file. Ensure prevalence.json is in the root directory.</p></div>`;
     }
 })();
-</script>
