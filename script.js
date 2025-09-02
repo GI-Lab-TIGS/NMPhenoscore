@@ -313,44 +313,6 @@ analyzeBtn.addEventListener('click', async () => {
             html += `</div>`;
         }
 
-        if (Object.keys(data.prioritized_conditions || {}).length > 1) {
-            html += '<div class="other-conditions"><h4>Other potential conditions:</h4>';
-            const sortedConditions = Object.entries(data.prioritized_conditions).sort((a, b) => b[1] - a[1]);
-            sortedConditions.slice(1, 4).forEach(([condition, score]) => {
-                if (score > 0) {
-                    html += `<p class="other-condition">- ${condition}: ${score} matching symptoms`;
-                    if (conditionUrls[condition]) {
-                        html += ` (<a href="${conditionUrls[condition]}" target="_blank">More Info</a>)`;
-                    }
-                    html += `</p>`;
-                }
-            });
-            html += '</div>';
-        }
-        
-        // Use cards for conditions (more interactive)
-        html += '<div class="conditions-grid">';
-        Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
-            const matched = data.matched_symptoms[condition] || [];
-            const url = conditionUrls[condition] || null;
-            html += `
-                <div class="condition-card">
-                    <h4>${condition}</h4>
-                    <p class="score">Score: ${score} matching symptom(s)</p>
-                    <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
-                    ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
-                    
-                </div>
-            `;
-        });
-        html += '</div>';
-
-        
-
-        if (Object.keys(data.prioritized_conditions || {}).length === 0) {
-            html += '<p>No conditions match the provided symptoms.</p>';
-        }
-
         // Add sunburst chart container
         html += '<div id="sunburstChart" style="width:100%; height:500px; margin-top: 20px;"></div>';
 
@@ -403,6 +365,47 @@ analyzeBtn.addEventListener('click', async () => {
         };
 
         Plotly.newPlot('sunburstChart', chartData, layout);
+        
+
+        if (Object.keys(data.prioritized_conditions || {}).length > 1) {
+            html += '<div class="other-conditions"><h4>Other potential conditions:</h4>';
+            const sortedConditions = Object.entries(data.prioritized_conditions).sort((a, b) => b[1] - a[1]);
+            sortedConditions.slice(1, 4).forEach(([condition, score]) => {
+                if (score > 0) {
+                    html += `<p class="other-condition">- ${condition}: ${score} matching symptoms`;
+                    if (conditionUrls[condition]) {
+                        html += ` (<a href="${conditionUrls[condition]}" target="_blank">More Info</a>)`;
+                    }
+                    html += `</p>`;
+                }
+            });
+            html += '</div>';
+        }
+        
+        // Use cards for conditions (more interactive)
+        html += '<div class="conditions-grid">';
+        Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
+            const matched = data.matched_symptoms[condition] || [];
+            const url = conditionUrls[condition] || null;
+            html += `
+                <div class="condition-card">
+                    <h4>${condition}</h4>
+                    <p class="score">Score: ${score} matching symptom(s)</p>
+                    <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
+                    ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
+                    
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        
+
+        if (Object.keys(data.prioritized_conditions || {}).length === 0) {
+            html += '<p>No conditions match the provided symptoms.</p>';
+        }
+
+        
 
         // Add click interactivity with URL support
         document.getElementById('sunburstChart').on('plotly_sunburstclick', function(plotData) {
