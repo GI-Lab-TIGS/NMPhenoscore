@@ -409,9 +409,9 @@ analyzeBtn.addEventListener('click', async () => {
         document.getElementById('sunburstChart').on('plotly_sunburstclick', function(plotData) {
             if (plotData.points && plotData.points[0]) {
                 const label = plotData.points[0].label;
-                if (conditionUrls[label]) {
-                    window.open(conditionUrls[label], '_blank');
-                }
+                //if (conditionUrls[label]) {
+                  //  window.open(conditionUrls[label], '_blank');
+                //}
             }
         });
     } catch (error) {
