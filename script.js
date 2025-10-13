@@ -1,6 +1,6 @@
 let symptoms = [];
 const commonSymptoms = [
-    'Muscle weakness', 'Progressive muscle degeneration', 'Elevated creatinine phosphokinase',
+    'Pyloric atresia', 'Retinopathy', 'Rippling muscles', 'Hyperreflexia', 'Polyhill sign', 'Hypogonadism ', 'Muscle weakness', 'Progressive muscle degeneration', 'Elevated creatinine phosphokinase',
     'Scoliosis', 'Joint contractures', 'Cardiac abnormalities', 'Respiratory failure', 'Developmental delay'
 ];
 
