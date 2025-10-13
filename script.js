@@ -282,44 +282,46 @@ analyzeBtn.addEventListener('click', async () => {
                 html += `<p><a href="${conditionUrls[data.top_condition]}" target="_blank" class="condition-link">Learn more about ${data.top_condition}</a></p>`;
             }
             html += `</div>`;
-        }
 
-        // Sunburst chart container
-        html += '<div id="sunburstChart" style="width:100%; height:500px; margin-top: 20px;"></div>';
+            // --- HPO extraction & Excel download (moved here) ---
+            const topCondition = data.top_condition;
+            const matchedSymptoms = data.matched_symptoms[topCondition] || [];
 
-        if (Object.keys(data.prioritized_conditions || {}).length > 1) {
-            html += '<div class="other-conditions"><h4>Other potential conditions:</h4>';
-            const sortedConditions = Object.entries(data.prioritized_conditions).sort((a, b) => b[1] - a[1]);
-            sortedConditions.slice(1, 4).forEach(([condition, score]) => {
-                if (score > 0) {
-                    html += `<p class="other-condition">- ${condition}: ${score} matching symptoms`;
-                    if (conditionUrls[condition]) html += ` (<a href="${conditionUrls[condition]}" target="_blank">More Info</a>)`;
-                    html += `</p>`;
-                }
-            });
-            html += '</div>';
-        }
-        
-        html += '<div class="conditions-grid">';
-        Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
-            const matched = data.matched_symptoms[condition] || [];
-            const url = conditionUrls[condition] || null;
-            html += `
-                <div class="condition-card">
-                    <h4>${condition}</h4>
-                    <p class="score">Score: ${score} matching symptom(s)</p>
-                    <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
-                    ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
-                </div>
-            `;
-        });
-        html += '</div>';
+            const hpoTerms = symptomConditionDf.symptoms
+                .filter(sym => matchedSymptoms.some(ms => sym.toLowerCase().includes(ms.toLowerCase())))
+                .map(sym => {
+                    const match = sym.match(/\(HP:\d+\)/);
+                    const hpo = match ? match[0].replace(/[()]/g, '') : '';
+                    return { Symptom: sym.split('(')[0].trim(), HPO_ID: hpo };
+                })
+                .filter(row => row.HPO_ID !== '');
 
-        if (Object.keys(data.prioritized_conditions || {}).length === 0) {
-            html += '<p>No conditions match the provided symptoms.</p>';
+            if (hpoTerms.length > 0) {
+                html += `
+                    <div class="hpo-section">
+                        <h3>HPO Terms for ${topCondition}:</h3>
+                        <table class="hpo-table">
+                            <tr><th>Symptom</th><th>HPO ID</th></tr>
+                            ${hpoTerms.map(r => `<tr><td>${r.Symptom}</td><td>${r.HPO_ID}</td></tr>`).join('')}
+                        </table>
+                        <button id="downloadHpoBtn" class="download-btn">📥 Download HPO Excel</button>
+                    </div>
+                `;
+            }
         }
 
         resultsDiv.innerHTML = `<div class="results-content">${html}</div>`;
+
+        // Add Excel download listener
+        if (data.top_condition && hpoTerms && hpoTerms.length > 0) {
+            document.getElementById('downloadHpoBtn').addEventListener('click', () => {
+                const wsData = [["Symptom", "HPO_ID"], ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])];
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
+                XLSX.writeFile(wb, `${data.top_condition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
+            });
+        }
 
         // Sunburst Chart
         let labels = ["Potential Conditions"];
@@ -365,41 +367,39 @@ analyzeBtn.addEventListener('click', async () => {
         const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
         Plotly.newPlot('sunburstChart', chartData, layout);
 
-        // --- HPO extraction & Excel download ---
-        if (data.top_condition) {
-            const topCondition = data.top_condition;
-            const matchedSymptoms = data.matched_symptoms[topCondition] || [];
+        // Other conditions grid
+        if (Object.keys(data.prioritized_conditions || {}).length > 1) {
+            html = '<div class="other-conditions"><h4>Other potential conditions:</h4>';
+            const sortedConditions = Object.entries(data.prioritized_conditions).sort((a, b) => b[1] - a[1]);
+            sortedConditions.slice(1, 4).forEach(([condition, score]) => {
+                if (score > 0) {
+                    html += `<p class="other-condition">- ${condition}: ${score} matching symptoms`;
+                    if (conditionUrls[condition]) html += ` (<a href="${conditionUrls[condition]}" target="_blank">More Info</a>)`;
+                    html += `</p>`;
+                }
+            });
+            html += '</div>';
+            resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', html);
+        }
 
-            const hpoTerms = symptomConditionDf.symptoms
-                .filter(sym => matchedSymptoms.some(ms => sym.toLowerCase().includes(ms.toLowerCase())))
-                .map(sym => {
-                    const match = sym.match(/\(HP:\d+\)/);
-                    const hpo = match ? match[0].replace(/[()]/g, '') : '';
-                    return { Symptom: sym.split('(')[0].trim(), HPO_ID: hpo };
-                })
-                .filter(row => row.HPO_ID !== '');
+        html = '<div class="conditions-grid">';
+        Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
+            const matched = data.matched_symptoms[condition] || [];
+            const url = conditionUrls[condition] || null;
+            html += `
+                <div class="condition-card">
+                    <h4>${condition}</h4>
+                    <p class="score">Score: ${score} matching symptom(s)</p>
+                    <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
+                    ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
+                </div>
+            `;
+        });
+        html += '</div>';
+        resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', html);
 
-            if (hpoTerms.length > 0) {
-                const hpoHtml = `
-                    <div class="hpo-section">
-                        <h3>HPO Terms for ${topCondition}:</h3>
-                        <table class="hpo-table">
-                            <tr><th>Symptom</th><th>HPO ID</th></tr>
-                            ${hpoTerms.map(r => `<tr><td>${r.Symptom}</td><td>${r.HPO_ID}</td></tr>`).join('')}
-                        </table>
-                        <button id="downloadHpoBtn" class="download-btn">📥 Download HPO Excel</button>
-                    </div>
-                `;
-                resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', hpoHtml);
-
-                document.getElementById('downloadHpoBtn').addEventListener('click', () => {
-                    const wsData = [["Symptom", "HPO_ID"], ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])];
-                    const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.aoa_to_sheet(wsData);
-                    XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
-                    XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
-                });
-            }
+        if (Object.keys(data.prioritized_conditions || {}).length === 0) {
+            resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', '<p>No conditions match the provided symptoms.</p>');
         }
 
     } catch (error) {
