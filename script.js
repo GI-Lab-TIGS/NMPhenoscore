@@ -70,7 +70,6 @@ function prioritizeConditions(symptomsList, symptomConditionDf, symptomMapping) 
 
     const filteredData = symptomIndices.map(idx => symptomConditionDf.data[idx]);
 
-    // Calculate scores (sum per condition)
     const conditionScores = {};
     symptomConditionDf.conditions.forEach((condition, colIdx) => {
         let score = 0;
@@ -78,7 +77,6 @@ function prioritizeConditions(symptomsList, symptomConditionDf, symptomMapping) 
         conditionScores[condition] = score;
     });
 
-    // Sort descending and filter >0
     const sortedScores = Object.entries(conditionScores)
         .filter(([, score]) => score > 0)
         .sort(([, a], [, b]) => b - a);
@@ -88,7 +86,6 @@ function prioritizeConditions(symptomsList, symptomConditionDf, symptomMapping) 
         prioritizedConditions[condition] = score;
     }
 
-    // Matched symptoms dict
     const matchedSymptomsDict = {};
     for (const condition of symptomConditionDf.conditions) {
         const matchedFull = [];
@@ -111,30 +108,21 @@ function prioritizeConditions(symptomsList, symptomConditionDf, symptomMapping) 
 async function loadData() {
     try {
         const response = await fetch('prevalence.json');
-        if (!response.ok) {
-            throw new Error('Failed to fetch prevalence.json');
-        }
+        if (!response.ok) throw new Error('Failed to fetch prevalence.json');
         const json = await response.json();
 
-        // Load prevalence data
         symptomConditionDf = json;
         allSymptoms = json.symptoms;
         symptomMapping = {};
         for (const full of allSymptoms) {
             const simple = extractSymptomName(full);
             const key = simple.toLowerCase();
-            if (!symptomMapping.hasOwnProperty(key)) {
-                symptomMapping[key] = full;
-            }
+            if (!symptomMapping.hasOwnProperty(key)) symptomMapping[key] = full;
         }
 
-        // Load condition URLs JSON
         const urlResponse = await fetch('conditions_gene_data.json');
-        if (urlResponse.ok) {
-            conditionUrls = await urlResponse.json();
-        } else {
-            console.warn('condition_urls.json not found or failed to load');
-        }
+        if (urlResponse.ok) conditionUrls = await urlResponse.json();
+        else console.warn('condition_urls.json not found or failed to load');
 
         console.log('Data loaded successfully');
         return true;
@@ -146,10 +134,7 @@ async function loadData() {
 
 // Fetch all possible symptoms for autocomplete
 async function fetchAllSymptoms() {
-    if (!symptomConditionDf) {
-        console.error('Data not loaded');
-        return;
-    }
+    if (!symptomConditionDf) { console.error('Data not loaded'); return; }
     const simpleSymptoms = allSymptoms.map(extractSymptomName);
     const uniqueSorted = [...new Set(simpleSymptoms)].sort();
     const datalist = document.getElementById('symptomSuggestions');
@@ -160,6 +145,7 @@ async function fetchAllSymptoms() {
     });
 }
 
+// DOM elements
 const input = document.getElementById('symptomInput');
 const addBtn = document.getElementById('addBtn');
 const addedList = document.getElementById('addedSymptoms');
@@ -167,12 +153,9 @@ const analyzeBtn = document.getElementById('analyzeBtn');
 const resultsDiv = document.getElementById('results');
 const clearBtn = document.getElementById('clearSymptoms');
 
-// Add symptom from input with animation
+// Add symptom
 addBtn.addEventListener('click', addSymptom);
-input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addSymptom();
-});
-
+input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSymptom(); });
 function addSymptom() {
     const symptom = input.value.trim();
     if (symptom && !symptoms.includes(symptom)) {
@@ -180,7 +163,6 @@ function addSymptom() {
         updateAddedList();
         input.value = '';
         updateAnalyzeBtn();
-        // Animate addition
         const newItem = addedList.lastChild;
         newItem.style.animation = 'fadeIn 0.5s';
     }
@@ -205,8 +187,7 @@ function updateAddedList() {
         `<div class="symptom-item">
             <span>${symptom}</span>
             <button type="button" onclick="removeSymptom(${index})"><i class="fas fa-times"></i></button>
-        </div>`
-    ).join('');
+        </div>`).join('');
     clearBtn.style.display = symptoms.length > 0 ? 'block' : 'none';
 }
 
@@ -215,12 +196,8 @@ function removeSymptom(index) {
     symptoms.splice(index, 1);
     updateAddedList();
     updateAnalyzeBtn();
-    // Re-enable common button if removed
     document.querySelectorAll('.common-symptoms button').forEach(btn => {
-        if (btn.dataset.symptom === symptom) {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        }
+        if (btn.dataset.symptom === symptom) { btn.disabled = false; btn.style.opacity = '1'; }
     });
 }
 
@@ -230,14 +207,13 @@ clearBtn.addEventListener('click', () => {
     updateAddedList();
     updateAnalyzeBtn();
     document.querySelectorAll('.common-symptoms button').forEach(btn => {
-        btn.disabled = false;
-        btn.style.opacity = '1';
+        btn.disabled = false; btn.style.opacity = '1';
     });
 });
 
-function updateAnalyzeBtn() {
-    analyzeBtn.disabled = symptoms.length === 0;
-}// Analyze with loading spinner
+function updateAnalyzeBtn() { analyzeBtn.disabled = symptoms.length === 0; }
+
+// Analyze button
 analyzeBtn.addEventListener('click', async () => {
     if (!symptomConditionDf) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: Data not loaded. Please refresh the page.</p></div>`;
@@ -256,14 +232,11 @@ analyzeBtn.addEventListener('click', async () => {
         for (const symptom of symptoms) {
             const originalSimple = extractSymptomName(symptom);
             const lowerSimple = originalSimple.toLowerCase();
-            if (symptomMapping.hasOwnProperty(lowerSimple)) {
-                valid_symptoms.push(originalSimple);
-            } else {
+            if (symptomMapping.hasOwnProperty(lowerSimple)) valid_symptoms.push(originalSimple);
+            else {
                 invalid_symptoms.push(symptom);
                 const closeMatches = findClosestMatches(symptom, allSymptoms);
-                if (closeMatches.length > 0) {
-                    suggested_matches[symptom] = closeMatches.slice(0, 3);
-                }
+                if (closeMatches.length > 0) suggested_matches[symptom] = closeMatches.slice(0, 3);
             }
         }
 
@@ -291,9 +264,7 @@ analyzeBtn.addEventListener('click', async () => {
         
         if (data.invalid_symptoms && data.invalid_symptoms.length > 0) {
             html += '<div class="warnings"><h4>Warning: The following symptoms were not recognized:</h4>';
-            data.invalid_symptoms.forEach(symptom => {
-                html += `<p>- '${symptom}'</p>`;
-            });
+            data.invalid_symptoms.forEach(symptom => { html += `<p>- '${symptom}'</p>`; });
             if (data.suggested_matches) {
                 Object.entries(data.suggested_matches).forEach(([invalid, matches]) => {
                     html += `<p>Suggested matches for '${invalid}':</p>`;
@@ -313,9 +284,8 @@ analyzeBtn.addEventListener('click', async () => {
             html += `</div>`;
         }
 
-        // Add sunburst chart container
+        // Sunburst chart container
         html += '<div id="sunburstChart" style="width:100%; height:500px; margin-top: 20px;"></div>';
-        
 
         if (Object.keys(data.prioritized_conditions || {}).length > 1) {
             html += '<div class="other-conditions"><h4>Other potential conditions:</h4>';
@@ -323,16 +293,13 @@ analyzeBtn.addEventListener('click', async () => {
             sortedConditions.slice(1, 4).forEach(([condition, score]) => {
                 if (score > 0) {
                     html += `<p class="other-condition">- ${condition}: ${score} matching symptoms`;
-                    if (conditionUrls[condition]) {
-                        html += ` (<a href="${conditionUrls[condition]}" target="_blank">More Info</a>)`;
-                    }
+                    if (conditionUrls[condition]) html += ` (<a href="${conditionUrls[condition]}" target="_blank">More Info</a>)`;
                     html += `</p>`;
                 }
             });
             html += '</div>';
         }
         
-        // Use cards for conditions (more interactive)
         html += '<div class="conditions-grid">';
         Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
             const matched = data.matched_symptoms[condition] || [];
@@ -343,13 +310,10 @@ analyzeBtn.addEventListener('click', async () => {
                     <p class="score">Score: ${score} matching symptom(s)</p>
                     <p class="matched">Matched: ${matched.join(', ') || 'None'}</p>
                     ${url ? `<p><a href="${url}" target="_blank" class="condition-link">More Info</a></p>` : ""}
-                    
                 </div>
             `;
         });
         html += '</div>';
-
-        
 
         if (Object.keys(data.prioritized_conditions || {}).length === 0) {
             html += '<p>No conditions match the provided symptoms.</p>';
@@ -398,22 +362,46 @@ analyzeBtn.addEventListener('click', async () => {
             marker: { line: {width: 2}, colors: colors }
         }];
 
-        const layout = {
-            margin: {l: 0, r: 0, b: 0, t: 0},
-            hovermode: 'closest'
-        };
-
+        const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
         Plotly.newPlot('sunburstChart', chartData, layout);
 
-        // Add click interactivity with URL support
-        document.getElementById('sunburstChart').on('plotly_sunburstclick', function(plotData) {
-            if (plotData.points && plotData.points[0]) {
-                const label = plotData.points[0].label;
-                //if (conditionUrls[label]) {
-                  //  window.open(conditionUrls[label], '_blank');
-                //}
+        // --- HPO extraction & Excel download ---
+        if (data.top_condition) {
+            const topCondition = data.top_condition;
+            const matchedSymptoms = data.matched_symptoms[topCondition] || [];
+
+            const hpoTerms = symptomConditionDf.symptoms
+                .filter(sym => matchedSymptoms.some(ms => sym.toLowerCase().includes(ms.toLowerCase())))
+                .map(sym => {
+                    const match = sym.match(/\(HP:\d+\)/);
+                    const hpo = match ? match[0].replace(/[()]/g, '') : '';
+                    return { Symptom: sym.split('(')[0].trim(), HPO_ID: hpo };
+                })
+                .filter(row => row.HPO_ID !== '');
+
+            if (hpoTerms.length > 0) {
+                const hpoHtml = `
+                    <div class="hpo-section">
+                        <h3>HPO Terms for ${topCondition}:</h3>
+                        <table class="hpo-table">
+                            <tr><th>Symptom</th><th>HPO ID</th></tr>
+                            ${hpoTerms.map(r => `<tr><td>${r.Symptom}</td><td>${r.HPO_ID}</td></tr>`).join('')}
+                        </table>
+                        <button id="downloadHpoBtn" class="download-btn">📥 Download HPO Excel</button>
+                    </div>
+                `;
+                resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', hpoHtml);
+
+                document.getElementById('downloadHpoBtn').addEventListener('click', () => {
+                    const wsData = [["Symptom", "HPO_ID"], ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])];
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
+                    XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
+                });
             }
-        });
+        }
+
     } catch (error) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: ${error.message}. Ensure the data files are available.</p></div>`;
     }
@@ -422,33 +410,19 @@ analyzeBtn.addEventListener('click', async () => {
     analyzeBtn.innerHTML = 'Analyze Symptoms';
 });
 
-// Toggle condition details
-function toggleDetails(btn) {
-    const details = btn.nextElementSibling;
-    details.style.display = details.style.display === 'none' ? 'block' : 'none';
-    const icon = btn.querySelector('i');
-    icon.classList.toggle('fa-chevron-down');
-    icon.classList.toggle('fa-chevron-up');
-}
-
-// Replace invalid symptom with suggestion
+// Replace invalid symptom
 function replaceSymptom(invalid, simple) {
     const index = symptoms.indexOf(invalid);
     if (index > -1) {
         symptoms[index] = simple;
         updateAddedList();
-        if (confirm(`Replaced '${invalid}' with '${simple}'. Re-analyze?`)) {
-            analyzeBtn.click();
-        }
+        if (confirm(`Replaced '${invalid}' with '${simple}'. Re-analyze?`)) analyzeBtn.click();
     }
 }
 
 // Initialize
 (async () => {
     const loaded = await loadData();
-    if (loaded) {
-        await fetchAllSymptoms();
-    } else {
-        resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
-    }
+    if (loaded) await fetchAllSymptoms();
+    else resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
 })();
