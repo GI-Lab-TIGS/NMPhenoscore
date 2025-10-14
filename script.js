@@ -283,6 +283,42 @@ analyzeBtn.addEventListener('click', async () => {
             }
             html += `</div>`;
         }
+                // --- NEW: HPO extraction & Excel download ---
+        if (data.top_condition) {
+            const topCondition = data.top_condition;
+            const matchedSymptoms = data.matched_symptoms[topCondition] || [];
+
+            const hpoTerms = symptomConditionDf.symptoms
+                .filter(sym => matchedSymptoms.some(ms => sym.toLowerCase().includes(ms.toLowerCase())))
+                .map(sym => {
+                    const match = sym.match(/\(HP:\d+\)/);
+                    const hpo = match ? match[0].replace(/[()]/g, '') : '';
+                    return { Symptom: sym.split('(')[0].trim(), HPO_ID: hpo };
+                })
+                .filter(row => row.HPO_ID !== '');
+
+            if (hpoTerms.length > 0) {
+                const hpoHtml = `
+                    <div class="hpo-section">
+                        <h3>HPO Terms for ${topCondition}:</h3>
+                        <table class="hpo-table">
+                            <tr><th>Symptom</th><th>HPO ID</th></tr>
+                            ${hpoTerms.map(r => `<tr><td>${r.Symptom}</td><td>${r.HPO_ID}</td></tr>`).join('')}
+                        </table>
+                        <button id="downloadHpoBtn" class="download-btn">📥 Download HPO Excel</button>
+                    </div>
+                `;
+                resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', hpoHtml);
+
+                document.getElementById('downloadHpoBtn').addEventListener('click', () => {
+                    const wsData = [["Symptom", "HPO_ID"], ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])];
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
+                    XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
+                });
+            }
+        }
 
         // Sunburst chart container
         html += '<div id="sunburstChart" style="width:100%; height:500px; margin-top: 20px;"></div>';
@@ -364,43 +400,6 @@ analyzeBtn.addEventListener('click', async () => {
 
         const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
         Plotly.newPlot('sunburstChart', chartData, layout);
-
-        // --- NEW: HPO extraction & Excel download ---
-        if (data.top_condition) {
-            const topCondition = data.top_condition;
-            const matchedSymptoms = data.matched_symptoms[topCondition] || [];
-
-            const hpoTerms = symptomConditionDf.symptoms
-                .filter(sym => matchedSymptoms.some(ms => sym.toLowerCase().includes(ms.toLowerCase())))
-                .map(sym => {
-                    const match = sym.match(/\(HP:\d+\)/);
-                    const hpo = match ? match[0].replace(/[()]/g, '') : '';
-                    return { Symptom: sym.split('(')[0].trim(), HPO_ID: hpo };
-                })
-                .filter(row => row.HPO_ID !== '');
-
-            if (hpoTerms.length > 0) {
-                const hpoHtml = `
-                    <div class="hpo-section">
-                        <h3>HPO Terms for ${topCondition}:</h3>
-                        <table class="hpo-table">
-                            <tr><th>Symptom</th><th>HPO ID</th></tr>
-                            ${hpoTerms.map(r => `<tr><td>${r.Symptom}</td><td>${r.HPO_ID}</td></tr>`).join('')}
-                        </table>
-                        <button id="downloadHpoBtn" class="download-btn">📥 Download HPO Excel</button>
-                    </div>
-                `;
-                resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', hpoHtml);
-
-                document.getElementById('downloadHpoBtn').addEventListener('click', () => {
-                    const wsData = [["Symptom", "HPO_ID"], ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])];
-                    const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.aoa_to_sheet(wsData);
-                    XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
-                    XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
-                });
-            }
-        }
 
     } catch (error) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: ${error.message}. Ensure the data files are available.</p></div>`;
