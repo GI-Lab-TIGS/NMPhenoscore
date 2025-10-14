@@ -365,7 +365,7 @@ analyzeBtn.addEventListener('click', async () => {
         const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
         Plotly.newPlot('sunburstChart', chartData, layout);
 
-    // --- NEW: HPO extraction & Excel download ---
+        // --- NEW: HPO extraction & Excel download ---
         if (data.top_condition) {
             const topCondition = data.top_condition;
             const matchedSymptoms = data.matched_symptoms[topCondition] || [];
