@@ -576,7 +576,7 @@
                         <div id="score-text" class="score-text">0.0%</div>
                     </div>
                     <div id="score-detail" class="score-detail">Symptoms selected: 0 out of 24</div>
-                    <button id="nmgd-status-button">NMGD Negative</button>
+                    <button id="nmgd-status-button">Likely NMGD Negative</button>
                 </div>
 		<button id="go-to-step2-button" class="action-button" style="background-color: var(--primary-blue);">Click here to know the specific condition of NMGD
                 </button>
@@ -645,7 +645,7 @@
                 scoreText.textContent = `${roundedPercentage}%`;
                 scoreDetail.textContent = `Symptoms selected: ${totalScore} out of ${TOTAL_SYMPTOMS}`;
                 
-                const statusText = isPositive ? "NMGD Positive" : "NMGD Negative";
+                const statusText = isPositive ? "Likely NMGD Positive" : "Likely NMGD Negative";
                 statusButton.textContent = statusText;
                 
                 statusButton.classList.remove('status-positive', 'status-negative');
@@ -672,4 +672,5 @@
 	document.getElementById('go-to-step2-button').addEventListener('click', () => {window.location.href = 'step2.html';});
     </script>
 </body>
+
 </html>
