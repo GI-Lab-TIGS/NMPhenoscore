@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NMPhenoscore Calculator</title>
+    <title>NMphenoscore Calculator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* General Styles */
         :root {
-            --primary-blue: #3b82f6; /* Tailwind Blue-500 */
-            --secondary-dark: #1e3a8a; /* Tailwind Blue-900 */
-            --background-light: #f3f4f6; /* Tailwind Gray-100 */
+            --primary-blue: #3b82f6;
+            --secondary-dark: #1e3a8a;
+            --background-light: #f3f4f6;
             --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             --border-color: #d1d5db;
-            --success-green: #10b981; /* Tailwind Green-500 */
-            --warning-yellow: #f59e0b; /* Tailwind Amber-500 */
+            --success-green: #10b981;
+            --warning-yellow: #f59e0b;
+            /* Quadrant colors for consistent symptom highlighting */
+            --color-systemic: #fca5a5;
+            --color-movement: #93c5fd;
+            --color-muscular: #86efac;
+            --color-sensory: #fde68a;
         }
 
         body {
@@ -26,10 +31,9 @@
             min-height: 100vh;
             margin: 0;
             background: var(--background-light);
-            color: #1f2937; /* Dark Gray */
+            color: #1f2937;
         }
         
-        /* --- NEW BANNER STYLES --- */
         #app-banner {
             width: 100%;
             background: linear-gradient(135deg, var(--secondary-dark), var(--primary-blue));
@@ -54,7 +58,6 @@
             opacity: 0.9;
         }
 
-        /* --- MAIN GRID LAYOUT (3x3 Centered Structure) --- */
         .main-container {
             width: 100%;
             max-width: 1400px;
@@ -63,38 +66,45 @@
 
         .main-layout {
             display: grid;
-            /* 1fr for side boxes | auto for central chart | 1fr for side boxes */
             grid-template-columns: 1fr 500px 1fr; 
-            grid-template-rows: auto auto auto; /* Top boxes, Chart row, Bottom boxes */
+            grid-template-rows: auto auto auto;
             align-items: center;
             justify-items: center;
-            gap: 20px 0; /* Vertical gap 20px, no horizontal gap */
+            gap: 20px 0;
             width: 100%;
         }
 
-        /* --- SYMPTOM LISTS (Box Positioning in the 3x3 grid) --- */
+        /* FIXED SIZE SYMPTOM BOXES */
         .symptom-box {
             background-color: #ffffff;
             padding: 20px;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
-            max-width: 380px;
-            min-width: 280px; /* Ensure boxes don't get too narrow */
+            width: 360px;
+            height: 420px;
             text-align: left;
             border: 1px solid #e5e7eb;
             z-index: 2;
-            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .symptom-box h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
+            margin: 0 0 15px 0;
             font-size: 1.3em;
             font-weight: 700;
             color: var(--primary-blue);
             border-bottom: 4px solid var(--primary-blue);
             padding-bottom: 8px;
             line-height: 1;
+            flex-shrink: 0;
+        }
+        
+        .symptom-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
         }
         
         .symptom-list {
@@ -103,7 +113,6 @@
             margin: 0;
         }
 
-        /* CHECKBOX LAYOUT */
         .symptom-list li {
             margin: 8px 0;
             display: flex;
@@ -112,21 +121,21 @@
             line-height: 1.4;
             padding: 6px 10px;
             border-radius: 8px;
-            transition: background-color 0.2s, border-left 0.2s;
+            transition: all 0.2s;
             cursor: pointer;
-            border-left: 4px solid transparent; 
+            border-left: 4px solid transparent;
         }
         
         .symptom-list li:hover {
-            background-color: #f9fafb; 
+            background-color: #f9fafb;
         }
 
         .symptom-list input[type="checkbox"] {
-            margin-top: 2px; 
+            margin-top: 2px;
             margin-right: 12px;
-            flex-shrink: 0; 
-            width: 18px; 
-            height: 18px; 
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
             accent-color: var(--primary-blue);
             cursor: pointer;
         }
@@ -136,46 +145,153 @@
             cursor: pointer;
         }
 
-        /* Interactive Feedback for Selected Items */
-        .symptom-list li.symptom-selected {
-            background-color: #e0f2fe; 
+        /* QUADRANT-CONSISTENT COLORING FOR SELECTED SYMPTOMS */
+        .symptom-list li.symptom-selected.systemic {
+            background-color: rgba(252, 165, 165, 0.3);
+            border-left-color: var(--color-systemic);
+            color: #991b1b;
             font-weight: 600;
-            border-left: 4px solid var(--primary-blue);
+        }
+
+        .symptom-list li.symptom-selected.movement {
+            background-color: rgba(147, 197, 253, 0.3);
+            border-left-color: var(--color-movement);
             color: var(--secondary-dark);
+            font-weight: 600;
+        }
+
+        .symptom-list li.symptom-selected.muscular {
+            background-color: rgba(134, 239, 172, 0.3);
+            border-left-color: var(--color-muscular);
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .symptom-list li.symptom-selected.sensory {
+            background-color: rgba(253, 230, 138, 0.3);
+            border-left-color: var(--color-sensory);
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        /* Scrollbar styling */
+        .symptom-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .symptom-list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .symptom-list-container::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 3px;
+        }
+
+        .symptom-list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-dark);
+        }
+
+        /* Grid positioning for symptom boxes */
+        .box-systemic { 
+            grid-column: 1 / 2; 
+            grid-row: 1 / 2; 
+            justify-self: end; 
+            align-self: end; 
         }
         
-        /* New Positioning in the 3x3 Grid */
-        /* Top Left - Systemic */
-        .box-systemic { grid-column: 1 / 2; grid-row: 1 / 2; justify-self: end; align-self: end; }
-        /* Top Right - Movement */
-        .box-movement { grid-column: 3 / 4; grid-row: 1 / 2; justify-self: start; align-self: end; }
-        /* Bottom Left - Muscular */
-        .box-muscular { grid-column: 1 / 2; grid-row: 3 / 4; justify-self: end; align-self: start; }
-        /* Bottom Right - Sensory & Behavioral */
-        .box-sensory { grid-column: 3 / 4; grid-row: 3 / 4; justify-self: start; align-self: start; }
+        .box-movement { 
+            grid-column: 3 / 4; 
+            grid-row: 1 / 2; 
+            justify-self: start; 
+            align-self: end; 
+        }
+        
+        .box-muscular { 
+            grid-column: 1 / 2; 
+            grid-row: 3 / 4; 
+            justify-self: end; 
+            align-self: start; 
+        }
+        
+        .box-sensory { 
+            grid-column: 3 / 4; 
+            grid-row: 3 / 4; 
+            justify-self: start; 
+            align-self: start; 
+        }
 
-
-        /* --- CIRCLE CONTAINER & QUADRANTS --- */
+        /* Updated Chart Container & Quadrant Styles */
         .chart-container {
             grid-column: 2 / 3;
-            grid-row: 1 / 4; /* Span all rows to place it centrally */
-            
+            grid-row: 1 / 4;
             position: relative;
             width: 500px;
             height: 500px;
             border-radius: 50%;
             background-color: #ffffff;
             box-shadow: 0 0 40px rgba(59, 130, 246, 0.1);
-            border: 4px solid var(--border-color); 
-            transition: border-color 0.5s ease-in-out; 
+            border: 4px solid var(--border-color);
+            transition: border-color 0.5s ease-in-out;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            z-index: 1; 
-            overflow: hidden; 
+            z-index: 1;
+            overflow: hidden;
         }
-        
-        /* Visual Divider for Circular Quadrants (Crosshair) */
+
+        /* Specific quadrant positioning with absolute centering */
+        .q-systemic {
+            grid-column: 1;
+            grid-row: 1;
+            background-color: #fef2f2;
+            position: relative;
+        }
+
+        .q-movement {
+            grid-column: 2;
+            grid-row: 1;
+            background-color: #eff6ff;
+            position: relative;
+        }
+
+        .q-muscular {
+            grid-column: 1;
+            grid-row: 2;
+            background-color: #f0fdf4;
+            position: relative;
+        }
+
+        .q-sensory {
+            grid-column: 2;
+            grid-row: 2;
+            background-color: #fffbeb;
+            position: relative;
+        }
+
+        /* Updated quadrant label styling with increased font size and absolute centering */
+        .quadrant-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            font-size: 1.8em; /* Increased font size for emphasis */
+            font-weight: 700;
+            color: var(--secondary-dark);
+            text-align: center;
+            line-height: 1.2;
+            padding: 5px; /* Minimal padding to avoid overflow */
+            white-space: normal; /* Allow text to wrap naturally */
+        }
+
+        /* Sensory label specific styling for the line break */
+        .q-sensory .quadrant-label {
+            line-height: 0.9; /* Adjusted for multi-line text */
+        }
+
+        /* Ensure the circular divider stays on top */
         .circular-divider {
             position: absolute;
             top: 0;
@@ -183,57 +299,38 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 5;
+            z-index: 4;
         }
-        
+
         .circular-divider::before,
         .circular-divider::after {
             content: '';
             position: absolute;
-            background-color: var(--border-color); 
+            background-color: var(--border-color);
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
         }
 
-        /* Vertical Line */
         .circular-divider::before {
-            width: 2px;
+            width: 3px;
             height: 100%;
             top: 0;
             left: 50%;
             transform: translateX(-50%);
+            z-index: 5;
         }
 
-        /* Horizontal Line */
         .circular-divider::after {
             width: 100%;
-            height: 2px;
+            height: 3px;
             top: 50%;
             left: 0;
             transform: translateY(-50%);
+            z-index: 5;
         }
 
-        .quadrant-label {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.6em;
-            font-weight: 700;
-            color: var(--secondary-dark);
-            text-align: center;
-            padding: 10px;
-            opacity: 0.9;
-        }
-        
-        /* Quadrant Color Coding */
-        .q-systemic { background-color: #fef2f2; } /* Top Left: Systemic */
-        .q-movement { background-color: #eff6ff; } /* Top Right: Movement */
-        .q-muscular { background-color: #f0fdf4; } /* Bottom Left: Muscular */
-        .q-sensory { background-color: #fffbeb; } /* Bottom Right: Sensory */
-
-
-        /* --- CONTROLS AND RESULTS --- */
+        /* Controls */
         .controls {
-            grid-column: 1 / 4; /* Spanning all three columns for full width */
+            grid-column: 1 / 4;
             grid-row: 4 / 5;
             display: flex;
             flex-direction: column;
@@ -241,11 +338,10 @@
             gap: 20px;
             width: 100%;
             padding-top: 30px;
-            margin-top: 20px; /* Separation from the main quadrants */
+            margin-top: 20px;
             border-top: 2px solid #e5e7eb;
         }
         
-        /* Button Style */
         .action-button {
             padding: 14px 35px;
             background-color: var(--success-green);
@@ -255,13 +351,13 @@
             font-size: 1.15em;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); 
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5);
             transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
             text-transform: uppercase;
         }
 
         .action-button:hover {
-            background-color: #059669; 
+            background-color: #059669;
             box-shadow: 0 6px 15px rgba(16, 185, 129, 0.7);
         }
 
@@ -269,7 +365,6 @@
             transform: translateY(1px);
         }
 
-        /* Result Card Container */
         .result-display-card {
             width: 100%;
             max-width: 320px;
@@ -287,7 +382,6 @@
             margin-bottom: 20px;
         }
 
-        /* --- SCORE GAUGE STYLES --- */
         .score-gauge-container {
             position: relative;
             width: 150px;
@@ -303,13 +397,8 @@
             transition: stroke-dashoffset 0.8s ease-in-out;
         }
 
-        .score-ring.bg {
-            stroke: #e5e7eb; 
-        }
-        
-        .score-ring.progress {
-            stroke-linecap: round;
-        }
+        .score-ring.bg { stroke: #e5e7eb; }
+        .score-ring.progress { stroke-linecap: round; }
 
         .score-text {
             position: absolute;
@@ -328,7 +417,6 @@
             margin-bottom: 20px;
         }
 
-        /* NMGD Status Button Style */
         #nmgd-status-button {
             display: block;
             width: 100%;
@@ -343,17 +431,17 @@
         }
 
         .status-positive {
-            background-color: var(--success-green); 
+            background-color: var(--success-green);
             color: white;
             box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
         }
 
         .status-negative {
             background-color: var(--warning-yellow);
-            color: #78350f; 
+            color: #78350f;
             box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
         }
-        
+
         /* Mobile Responsiveness */
         @media (max-width: 1100px) {
             .main-layout {
@@ -361,130 +449,133 @@
                 gap: 25px 0;
             }
             
-            /* Stack elements for mobile */
-            .box-systemic { grid-row: 1; grid-column: 1; justify-self: center; align-self: center;}
-            .box-movement { grid-row: 2; grid-column: 1; justify-self: center; align-self: center;}
+            .symptom-box {
+                width: 95%;
+                max-width: 360px;
+                height: 420px;
+                margin: 0 auto;
+            }
+            
+            .box-systemic { grid-row: 1; grid-column: 1; }
+            .box-movement { grid-row: 2; grid-column: 1; }
             .chart-container { 
                 grid-row: 3; 
                 grid-column: 1; 
                 width: 300px;
                 height: 300px;
             }
-            .box-muscular { grid-row: 4; grid-column: 1; justify-self: center; align-self: center;} 
-            .box-sensory { grid-row: 5; grid-column: 1; justify-self: center; align-self: center;} 
+            .box-muscular { grid-row: 4; grid-column: 1; } 
+            .box-sensory { grid-row: 5; grid-column: 1; } 
             
-            .controls {
-                grid-row: 6;
-                grid-column: 1;
-            }
+            .controls { grid-row: 6; grid-column: 1; }
+            
+            #app-banner h1 { font-size: 1.8rem; }
+        }
 
-            .symptom-box {
-                max-width: 95%;
-                min-width: unset;
-            }
-            
-            #app-banner h1 {
-                font-size: 1.8rem;
-            }
+        /* Disclaimer Styling */
+        .disclaimer {
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #6b7280;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
         }
     </style>
 </head>
 <body>
-    
-    <!-- NEW BANNER SECTION -->
     <div id="app-banner">
-        <h1>NMPhenoscore</h1>
+        <h1>NMphenoscore</h1>
         <p>Initial screening for Neuromuscular genetic disorder(NMGD)</p>
     </div>
 
     <div class="main-container">
-
-        <!-- The main layout uses a grid to position the lists around the central diagram -->
         <div class="main-layout">
-            
-            <!-- Symptom Box: Systemic (Top Left of the Circle) -->
+            <!-- Systemic Box -->
             <div class="symptom-box box-systemic">
                 <h3>Systemic</h3>
-                <ul class="symptom-list">
-                    <li><input type="checkbox" data-score="1" id="s1"><label for="s1">Breathing difficulties</label></li>
-                    <li><input type="checkbox" data-score="1" id="s2"><label for="s2">Cardiac symptoms (dizziness, syncope, chest pain, orthopnea, cardiac complaints with exertion)</label></li>
-                    <li><input type="checkbox" data-score="1" id="s3"><label for="s3">Dizziness/headache</label></li>
-                    <li><input type="checkbox" data-score="1" id="s4"><label for="s4">Gastrointestinal dysfunction</label></li>
-                    <li><input type="checkbox" data-score="1" id="s5"><label for="s5">Sleep disturbance</label></li>
-                    <li><input type="checkbox" data-score="1" id="s6"><label for="s6">Urinary dysfunctions</label></li>
-                </ul>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s1"><label for="s1">Breathing difficulties</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s2"><label for="s2">Cardiac symptoms (dizziness, syncope, chest pain, orthopnea, cardiac complaints with exertion)</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s3"><label for="s3">Dizziness/headache</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s4"><label for="s4">Gastrointestinal dysfunction</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s5"><label for="s5">Sleep disturbance</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s6"><label for="s6">Urinary dysfunctions</label></li>
+                    </ul>
+                </div>
             </div>
             
-            <!-- Symptom Box: Movement (Top Right of the Circle) -->
+            <!-- Movement Box -->
             <div class="symptom-box box-movement">
                 <h3>Movement</h3>
-                <ul class="symptom-list">
-                    <li><input type="checkbox" data-score="1" id="m1"><label for="m1">Difficulty in walking/running/jumping/climbing stairs/maintaining body balance</label></li>
-                    <li><input type="checkbox" data-score="1" id="m2"><label for="m2">Difficulty in transitions from the floor to standing / unable to rise from chair</label></li>
-                    <li><input type="checkbox" data-score="1" id="m3"><label for="m3">Difficulty in daily activities (dressing, lifting things, reaching overhead)</label></li>
-                    <li><input type="checkbox" data-score="1" id="m4"><label for="m4">Difficulty in swallowing/chewing/feeding</label></li>
-                    <li><input type="checkbox" data-score="1" id="m5"><label for="m5">Toe walking</label></li>
-                    <li><input type="checkbox" data-score="1" id="m6"><label for="m6">Abnormal gait</label></li>
-                    <li><input type="checkbox" data-score="1" id="m7"><label for="m7">Non-ambulatory</label></li>
-                    <li><input type="checkbox" data-score="1" id="m8"><label for="m8">Frequent falls</label></li>
-                </ul>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m1"><label for="m1">Difficulty in walking/running/jumping/climbing stairs/maintaining body balance</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m2"><label for="m2">Difficulty in transitions from the floor to standing / unable to rise from chair</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m3"><label for="m3">Difficulty in daily activities (dressing, lifting things, reaching overhead)</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m4"><label for="m4">Difficulty in swallowing/chewing/feeding</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m5"><label for="m5">Toe walking</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m6"><label for="m6">Abnormal gait</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m7"><label for="m7">Non-ambulatory</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m8"><label for="m8">Frequent falls</label></li>
+                    </ul>
+                </div>
             </div>
             
-            <!-- The main circular chart container (Center of the 3x3 grid) -->
+            <!-- Updated Chart Container with perfect centering -->
             <div class="chart-container" id="chart-container">
-                <div class="quadrant-label q-systemic">Systemic</div>
-                <div class="quadrant-label q-movement">Movement</div>
-                <div class="quadrant-label q-muscular">Muscular</div>
-               <div class="quadrant-label q-sensory">Sensory &<br>Behavioral</div>
-                <!-- Crosshair Divider -->
+                <div class="q-systemic"><div class="quadrant-label">Systemic</div></div>
+                <div class="q-movement"><div class="quadrant-label">Movement</div></div>
+                <div class="q-muscular"><div class="quadrant-label">Muscular</div></div>
+                <div class="q-sensory"><div class="quadrant-label">Sensory &<br>Behavioral</div></div>
                 <div class="circular-divider"></div>
             </div>
             
-            <!-- Symptom Box: Muscular (Bottom Left of the Circle) -->
+            <!-- Muscular Box -->
             <div class="symptom-box box-muscular">
                 <h3>Muscular</h3>
-                <ul class="symptom-list">
-                    <li><input type="checkbox" data-score="1" id="mu1"><label for="mu1">Involuntary muscle contractions</label></li>
-                    <li><input type="checkbox" data-score="1" id="mu2"><label for="mu2">Muscle stiffness</label></li>
-                    <li><input type="checkbox" data-score="1" id="mu3"><label for="mu3">Muscle weakness</label></li>
-                    <li><input type="checkbox" data-score="1" id="mu4"><label for="mu4">Muscle wasting</label></li>
-                </ul>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu1"><label for="mu1">Involuntary muscle contractions</label></li>
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu2"><label for="mu2">Muscle stiffness</label></li>
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu3"><label for="mu3">Muscle weakness</label></li>
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu4"><label for="mu4">Muscle wasting</label></li>
+                    </ul>
+                </div>
             </div>
             
-            <!-- Symptom Box: Sensory & Behavioral (Bottom Right of the Circle) -->
+            <!-- Sensory Box -->
             <div class="symptom-box box-sensory">
                 <h3>Sensory & Behavioral</h3>
-                <ul class="symptom-list">
-                    <li><input type="checkbox" data-score="1" id="sb1"><label for="sb1">Pain</label></li>
-                    <li><input type="checkbox" data-score="1" id="sb2"><label for="sb2">Joint pain and/or swollen joints</label></li>
-                    <li><input type="checkbox" data-score="1" id="sb3"><label for="sb3">Tingling</label></li>
-                    <li><input type="checkbox" data-score="1" id="sb4"><label for="sb4">Behavioral or cognitive impairment</label></li>
-                    <li><input type="checkbox" data-score="1" id="sb5"><label for="sb5">Sensory impairment (hearing/speech/vision)</label></li>
-                    <li><input type="checkbox" data-score="1" id="sb6"><label for="sb6">Loss of head control</label></li>
-                </ul>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb1"><label for="sb1">Pain</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb2"><label for="sb2">Joint pain and/or swollen joints</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb3"><label for="sb3">Tingling</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb4"><label for="sb4">Behavioral or cognitive impairment</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb5"><label for="sb5">Sensory impairment (hearing/speech/vision)</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb6"><label for="sb6">Loss of head control</label></li>
+                    </ul>
+                </div>
             </div>
             
-            <!-- Controls and Results (Spanning the bottom of the grid) -->
+            <!-- Controls -->
             <div class="controls">
-                
-                <!-- CALCULATE BUTTON -->
                 <button id="calculate-button" class="action-button">CALCULATE</button>
                 
                 <div id="result-card" class="result-display-card">
                     <h4>Assessment Score</h4>
-                    
                     <div class="score-gauge-container">
                         <svg viewBox="0 0 120 120">
-                            <!-- Background ring -->
                             <circle class="score-ring bg" cx="60" cy="60" r="54"></circle>
-                            <!-- Progress ring (will be updated by JS) -->
                             <circle id="score-ring-progress" class="score-ring progress" cx="60" cy="60" r="54"></circle>
                         </svg>
                         <div id="score-text" class="score-text">0.0%</div>
                     </div>
-                    
                     <div id="score-detail" class="score-detail">Symptoms selected: 0 out of 24</div>
-                    
                     <button id="nmgd-status-button">NMGD Negative</button>
                 </div>
 		<button id="go-to-step2-button" class="action-button" style="background-color: var(--primary-blue);">Click here to know the specific condition of NMGD
@@ -493,6 +584,9 @@
         </div>
     </div>
 
+    <div class="disclaimer">
+        <p>Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.kindly refer to  ___________.</p>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -503,52 +597,44 @@
             const progressRing = document.getElementById('score-ring-progress');
             const chartContainer = document.getElementById('chart-container');
             
-            // Gauge constants (r=54 for radius, C=340 for circumference/dasharray)
             const RADIUS = 54;
-            const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // Approx 339.29
+            const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
             progressRing.style.strokeDasharray = CIRCUMFERENCE;
 
-            // Query all checkboxes that contribute to the score
             const checkboxes = document.querySelectorAll('input[type="checkbox"][data-score="1"]');
-            
-            // Total number of symptoms across all categories (6 + 8 + 4 + 6 = 24)
-            const TOTAL_SYMPTOMS = checkboxes.length; 
-            const THRESHOLD_PERCENTAGE = 30; // 30% threshold
+            const TOTAL_SYMPTOMS = checkboxes.length;
+            const THRESHOLD_PERCENTAGE = 30;
 
-            /**
-             * Updates the score, gauge, and status indicators only when called 
-             * (now only via the Calculate button).
-             */
             const updateScore = () => {
                 let totalScore = 0;
                 
-                // 1. Calculate Total Score and update list item visuals 
                 checkboxes.forEach(checkbox => {
                     const listItem = checkbox.closest('li');
                     
                     if (checkbox.checked) {
                         totalScore += 1;
-                        // Apply visual highlight only when calculated
-                        if (listItem) listItem.classList.add('symptom-selected');
+                        if (listItem) {
+                            listItem.classList.add('symptom-selected');
+                            const category = checkbox.dataset.category;
+                            listItem.classList.add(category);
+                        }
                     } else {
-                        // Remove visual highlight if not selected
-                        if (listItem) listItem.classList.remove('symptom-selected');
+                        if (listItem) {
+                            listItem.classList.remove('symptom-selected', 'systemic', 'movement', 'muscular', 'sensory');
+                        }
                     }
                 });
 
-                // 2. Compute the percentage score
                 const percentageScore = (totalScore / TOTAL_SYMPTOMS) * 100;
-                const roundedPercentage = percentageScore.toFixed(1); 
+                const roundedPercentage = percentageScore.toFixed(1);
                 const isPositive = percentageScore >= THRESHOLD_PERCENTAGE;
 
-                // 3. Update the Score Gauge (SVG)
                 const offset = CIRCUMFERENCE * (1 - percentageScore / 100);
                 progressRing.style.strokeDashoffset = offset;
                 
-                // Set the color based on status
                 let progressColor;
                 if (percentageScore === 0) {
-                    progressColor = '#e5e7eb'; // Gray for 0%
+                    progressColor = '#e5e7eb';
                 } else if (isPositive) {
                     progressColor = 'var(--success-green)';
                 } else {
@@ -556,51 +642,34 @@
                 }
                 progressRing.style.stroke = progressColor;
 
-
-                // 4. Update Result Text and Status Button
                 scoreText.textContent = `${roundedPercentage}%`;
                 scoreDetail.textContent = `Symptoms selected: ${totalScore} out of ${TOTAL_SYMPTOMS}`;
                 
                 const statusText = isPositive ? "NMGD Positive" : "NMGD Negative";
                 statusButton.textContent = statusText;
                 
-                // Update status button class
                 statusButton.classList.remove('status-positive', 'status-negative');
                 statusButton.classList.add(isPositive ? 'status-positive' : 'status-negative');
 
-                // 5. Update Chart Visuals (Border color change for extra effect)
                 chartContainer.style.borderColor = isPositive ? 'var(--success-green)' : 'var(--warning-yellow)';
             };
 
-            // Set up event listeners for list item click to toggle the checkbox.
             checkboxes.forEach(checkbox => {
                 const listItem = checkbox.closest('li');
                 if (listItem) {
                     listItem.addEventListener('click', (event) => {
-                        // Prevent the list item click from toggling if the user clicks the checkbox or label itself
                         if (event.target !== checkbox && event.target.tagName !== 'LABEL') {
                             checkbox.checked = !checkbox.checked;
                         }
-                        // IMPORTANT: Still no call to updateScore() here, sticking to explicit CALCULATE button click.
                     });
                 }
             });
             
-            // Attaching the ONLY event listener that triggers score calculation.
             calculateButton.addEventListener('click', updateScore);
-            
-            // Initial call to set the 0% score and base styles on load
             updateScore();
-            chartContainer.style.borderColor = 'var(--border-color)'; /* Reset initial color to gray */
+            chartContainer.style.borderColor = 'var(--border-color)';
         });
 	document.getElementById('go-to-step2-button').addEventListener('click', () => {window.location.href = 'step2.html';});
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
