@@ -490,8 +490,60 @@
         <h1>NMphenoscore</h1>
         <p>Initial screening for Neuromuscular genetic disorder(NMGD)</p>
     </div>
+<!-- PATIENT PROFILE SECTION -->
+<div id="patient-profile" class="main-container">
+    <div style="
+        max-width: 420px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #e5e7eb;
+        text-align: left;
+    ">
+        <h2 style="
+            text-align:center;
+            color: var(--secondary-dark);
+            margin-bottom: 25px;
+        ">
+            Patient Profile
+        </h2>
 
-    <div class="main-container">
+        <label style="font-weight:600;">Patient Name</label>
+        <input id="patientName" type="text" placeholder="Full name"
+            style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
+        <label style="font-weight:600; margin-top:15px; display:block;">Age</label>
+        <input id="patientAge" type="number" placeholder="Age"
+            style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
+        <label style="font-weight:600; margin-top:15px; display:block;">Contact</label>
+        <input id="patientContact" type="tel" placeholder="Contact number"
+            style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
+        <button class="action-button" style="width:100%; margin-top:25px;"
+            onclick="launchTool()">
+            Launch Tool
+        </button>
+    </div>
+</div>
+
+    <div class="main-container" id="tool-container" style="display:none;">
+    
+    <!-- PATIENT INFO BAR -->
+    <div id="patient-bar" style="
+        background:#ffffff;
+        padding:15px 25px;
+        margin-bottom:25px;
+        border-radius:12px;
+        box-shadow:0 4px 10px rgba(0,0,0,0.08);
+        font-weight:600;
+    ">
+        Patient: <span id="pName"></span> |
+        Age: <span id="pAge"></span> |
+        Contact: <span id="pContact"></span>
+    </div>
         <div class="main-layout">
             <!-- Systemic Box -->
             <div class="symptom-box box-systemic">
@@ -585,7 +637,7 @@
     </div>
 
     <div class="disclaimer">
-        <p>Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.kindly refer to  ___________.</p>
+        <p>Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.</p>
     </div>
 
     <script>
@@ -670,6 +722,45 @@
             chartContainer.style.borderColor = 'var(--border-color)';
         });
 	document.getElementById('go-to-step2-button').addEventListener('click', () => {window.location.href = 'step2.html';});
+	function launchTool() {
+    const name = document.getElementById("patientName").value.trim();
+    const age = document.getElementById("patientAge").value.trim();
+    const contact = document.getElementById("patientContact").value.trim();
+
+    if (!name || !age || !contact) {
+        alert("Please fill all patient details.");
+        return;
+    }
+
+    localStorage.setItem("patientName", name);
+    localStorage.setItem("patientAge", age);
+    localStorage.setItem("patientContact", contact);
+
+    showTool();
+}
+
+function showTool() {
+    const name = localStorage.getItem("patientName");
+    const age = localStorage.getItem("patientAge");
+    const contact = localStorage.getItem("patientContact");
+
+    if (!name || !age || !contact) return;
+
+    document.getElementById("patient-profile").style.display = "none";
+    document.getElementById("tool-container").style.display = "block";
+
+    document.getElementById("pName").textContent = name;
+    document.getElementById("pAge").textContent = age;
+    document.getElementById("pContact").textContent = contact;
+}
+
+// Auto-resume if already filled
+document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("patientName")) {
+        showTool();
+    }
+});
+
     </script>
 </body>
 
