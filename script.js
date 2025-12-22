@@ -215,6 +215,8 @@ function updateAnalyzeBtn() { analyzeBtn.disabled = symptoms.length === 0; }
 
 // Analyze button
 analyzeBtn.addEventListener('click', async () => {
+
+
     if (!symptomConditionDf) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: Data not loaded. Please refresh the page.</p></div>`;
         return;
@@ -259,6 +261,29 @@ analyzeBtn.addEventListener('click', async () => {
             matched_symptoms,
             top_condition
         };
+        // ===== SAVE STEP 2 RESULTS FOR REPORT =====
+localStorage.setItem("step2TopCondition", data.top_condition || "");
+
+localStorage.setItem(
+    "step2PrioritizedConditions",
+    JSON.stringify(data.prioritized_conditions || {})
+);
+
+localStorage.setItem(
+    "step2MatchedSymptoms",
+    JSON.stringify(data.matched_symptoms || {})
+);
+
+localStorage.setItem(
+    "step2ValidSymptoms",
+    JSON.stringify(data.valid_symptoms || [])
+);
+
+localStorage.setItem(
+    "step2InvalidSymptoms",
+    JSON.stringify(data.invalid_symptoms || [])
+);
+
 
         let html = `<h3>Prioritized conditions (based on ${data.valid_symptoms?.length || 0} symptoms):</h3>`;
         
@@ -399,6 +424,7 @@ analyzeBtn.addEventListener('click', async () => {
                     XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
                     XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
                 });
+                localStorage.setItem("step2HpoTerms", JSON.stringify(hpoTerms));
             }
         }
 
