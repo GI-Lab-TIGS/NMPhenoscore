@@ -10,6 +10,66 @@ let symptomMapping = {};
 let conditionUrls = {};
 let uploadedImages = [];
 
+// Handle image uploads
+function handleImageUpload(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedImages.push(e.target.result);
+                console.log(`Image uploaded: ${file.name}`);
+                updateImagePreview();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            alert(`File ${file.name} is not an image and was skipped.`);
+        }
+    });
+}
+
+// Update image preview display
+function updateImagePreview() {
+    const previewContainer = document.getElementById('imagePreview');
+    if (!previewContainer) return;
+    
+    previewContainer.innerHTML = '';
+    uploadedImages.forEach((imgData, index) => {
+        const imgWrapper = document.createElement('div');
+        imgWrapper.style.cssText = 'position: relative; display: inline-block; margin: 5px;';
+        
+        const img = document.createElement('img');
+        img.src = imgData;
+        img.style.cssText = 'width: 100px; height: 100px; object-fit: cover; border: 2px solid #ddd; border-radius: 5px;';
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '×';
+        removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 18px; line-height: 1;';
+        removeBtn.onclick = () => {
+            uploadedImages.splice(index, 1);
+            updateImagePreview();
+        };
+        
+        imgWrapper.appendChild(img);
+        imgWrapper.appendChild(removeBtn);
+        previewContainer.appendChild(imgWrapper);
+    });
+    
+    if (uploadedImages.length > 0) {
+        previewContainer.style.display = 'block';
+    } else {
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Initialize image upload handler
+const imageUploadInput = document.getElementById('imageUpload');
+if (imageUploadInput) {
+    imageUploadInput.addEventListener('change', handleImageUpload);
+}
+
 // Function to compute LCS length
 function lcsLength(s1, s2) {
     const m = s1.length;
@@ -752,6 +812,7 @@ async function generateFinalNMPhenoscorePDF() {
 window.removeSymptom = removeSymptom;
 window.replaceSymptom = replaceSymptom;
 window.generateFinalNMPhenoscorePDF = generateFinalNMPhenoscorePDF;
+window.handleImageUpload = handleImageUpload;
 
 // Initialize on page load
 (async () => {
@@ -759,9 +820,9 @@ window.generateFinalNMPhenoscorePDF = generateFinalNMPhenoscorePDF;
     if (loaded) {
         await fetchAllSymptoms();
         
-        // Setup PDF download button listener
+        // Setup PDF download button listener ONLY if it doesn't have onclick in HTML
         const downloadPdfBtn = document.getElementById("downloadPdfBtn");
-        if (downloadPdfBtn) {
+        if (downloadPdfBtn && !downloadPdfBtn.onclick) {
             downloadPdfBtn.addEventListener('click', generateFinalNMPhenoscorePDF);
         }
     } else {
