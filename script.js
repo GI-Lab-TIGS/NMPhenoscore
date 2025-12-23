@@ -481,66 +481,52 @@ function replaceSymptom(invalid, simple) {
 }
 
 function handleImageFile(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    uploadedItems.push({
-      id: Date.now() + Math.random(),
-      type: "image",
-      dataUrl: reader.result,
-      name: file.name
-    });
-    renderPreview();
-  };
-  reader.readAsDataURL(file);
+  uploadedItems.push({
+    id: crypto.randomUUID(),
+    type: "image",
+    file: file,
+    name: file.name
+  });
+  renderFileList();
 }
+
 async function handlePdfFile(file) {
-  const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 2 });
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-
-    await page.render({ canvasContext: ctx, viewport }).promise;
-
-    uploadedItems.push({
-      id: crypto.randomUUID(),
-      type: "image",
-      dataUrl: canvas.toDataURL("image/png"),
-      name: `${file.name} (page ${i})`
-    });
-  }
-
-  renderPreview();
+  uploadedItems.push({
+    id: crypto.randomUUID(),
+    type: "pdf",
+    file: file,
+    name: file.name
+  });
+  renderFileList();
 }
-function renderPreview() {
+
+function renderFileList() {
   previewContainer.innerHTML = "";
 
+  if (uploadedItems.length === 0) {
+    previewContainer.innerHTML = "<p class='text-gray-500'>No files uploaded</p>";
+    return;
+  }
+
   uploadedItems.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "preview-item";
+    const row = document.createElement("div");
+    row.className = "file-row";
 
-    const img = document.createElement("img");
-    img.src = item.dataUrl;
+    const name = document.createElement("span");
+    name.textContent = item.name;
+    name.className = "file-name";
 
-    const btn = document.createElement("button");
-    btn.className = "remove-btn";
-    btn.textContent = "✖";
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      uploadedItems = uploadedItems.filter(i => i.id !== item.id);
-      renderPreview();
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "Remove";
+    removeBtn.className = "remove-btn";
+    removeBtn.onclick = () => {
+      uploadedItems = uploadedItems.filter(f => f.id !== item.id);
+      renderFileList();
     };
 
-    div.appendChild(img);
-    div.appendChild(btn);
-    previewContainer.appendChild(div);
+    row.appendChild(name);
+    row.appendChild(removeBtn);
+    previewContainer.appendChild(row);
   });
 }
 
