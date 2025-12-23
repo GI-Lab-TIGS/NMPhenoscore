@@ -15,7 +15,6 @@
             --border-color: #d1d5db;
             --success-green: #10b981;
             --warning-yellow: #f59e0b;
-            /* Quadrant colors for consistent symptom highlighting */
             --color-systemic: #fca5a5;
             --color-movement: #93c5fd;
             --color-muscular: #86efac;
@@ -74,7 +73,6 @@
             width: 100%;
         }
 
-        /* FIXED SIZE SYMPTOM BOXES */
         .symptom-box {
             background-color: #ffffff;
             padding: 20px;
@@ -145,7 +143,6 @@
             cursor: pointer;
         }
 
-        /* QUADRANT-CONSISTENT COLORING FOR SELECTED SYMPTOMS */
         .symptom-list li.symptom-selected.systemic {
             background-color: rgba(252, 165, 165, 0.3);
             border-left-color: var(--color-systemic);
@@ -174,7 +171,6 @@
             font-weight: 600;
         }
 
-        /* Scrollbar styling */
         .symptom-list-container::-webkit-scrollbar {
             width: 6px;
         }
@@ -193,7 +189,6 @@
             background: var(--secondary-dark);
         }
 
-        /* Grid positioning for symptom boxes */
         .box-systemic { 
             grid-column: 1 / 2; 
             grid-row: 1 / 2; 
@@ -222,7 +217,6 @@
             align-self: start; 
         }
 
-        /* Updated Chart Container & Quadrant Styles */
         .chart-container {
             grid-column: 2 / 3;
             grid-row: 1 / 4;
@@ -241,7 +235,6 @@
             overflow: hidden;
         }
 
-        /* Specific quadrant positioning with absolute centering */
         .q-systemic {
             grid-column: 1;
             grid-row: 1;
@@ -270,28 +263,25 @@
             position: relative;
         }
 
-        /* Updated quadrant label styling with increased font size and absolute centering */
         .quadrant-label {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 3;
-            font-size: 1.8em; /* Increased font size for emphasis */
+            font-size: 1.8em;
             font-weight: 700;
             color: var(--secondary-dark);
             text-align: center;
             line-height: 1.2;
-            padding: 5px; /* Minimal padding to avoid overflow */
-            white-space: normal; /* Allow text to wrap naturally */
+            padding: 5px;
+            white-space: normal;
         }
 
-        /* Sensory label specific styling for the line break */
         .q-sensory .quadrant-label {
-            line-height: 0.9; /* Adjusted for multi-line text */
+            line-height: 0.9;
         }
 
-        /* Ensure the circular divider stays on top */
         .circular-divider {
             position: absolute;
             top: 0;
@@ -328,7 +318,6 @@
             z-index: 5;
         }
 
-        /* Controls */
         .controls {
             grid-column: 1 / 4;
             grid-row: 4 / 5;
@@ -442,7 +431,6 @@
             box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
         }
 
-        /* Mobile Responsiveness */
         @media (max-width: 1100px) {
             .main-layout {
                 grid-template-columns: 1fr;
@@ -472,7 +460,6 @@
             #app-banner h1 { font-size: 1.8rem; }
         }
 
-        /* Disclaimer Styling */
         .disclaimer {
             width: 100%;
             max-width: 1400px;
@@ -490,62 +477,60 @@
         <h1>NMphenoscore</h1>
         <p>Initial screening for Neuromuscular genetic disorder(NMGD)</p>
     </div>
-<!-- PATIENT PROFILE SECTION -->
-<div id="patient-profile" class="main-container">
-    <div style="
-        max-width: 420px;
-        margin: 0 auto;
-        background: #ffffff;
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        border: 1px solid #e5e7eb;
-        text-align: left;
-    ">
-        <h2 style="
-            text-align:center;
-            color: var(--secondary-dark);
-            margin-bottom: 25px;
+
+    <div id="patient-profile" class="main-container">
+        <div style="
+            max-width: 420px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #e5e7eb;
+            text-align: left;
         ">
-            Patient Profile
-        </h2>
+            <h2 style="
+                text-align:center;
+                color: var(--secondary-dark);
+                margin-bottom: 25px;
+            ">
+                Patient Profile
+            </h2>
 
-        <label style="font-weight:600;">Patient Name</label>
-        <input id="patientName" type="text" placeholder="Full name"
-            style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+            <label style="font-weight:600;">Patient Name</label>
+            <input id="patientName" type="text" placeholder="Full name"
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
-        <label style="font-weight:600; margin-top:15px; display:block;">Age</label>
-        <input id="patientAge" type="number" placeholder="Age"
-            style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+            <label style="font-weight:600; margin-top:15px; display:block;">Age</label>
+            <input id="patientAge" type="number" placeholder="Age"
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
-        <label style="font-weight:600; margin-top:15px; display:block;">Contact</label>
-        <input id="patientContact" type="tel" placeholder="Contact number"
-            style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+            <label style="font-weight:600; margin-top:15px; display:block;">Contact</label>
+            <input id="patientContact" type="tel" placeholder="Contact number"
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
-        <button class="action-button" style="width:100%; margin-top:25px;"
-            onclick="launchTool()">
-            Launch Tool
-        </button>
+            <button class="action-button" style="width:100%; margin-top:25px;"
+                onclick="launchTool()">
+                Launch Tool
+            </button>
+        </div>
     </div>
-</div>
 
     <div class="main-container" id="tool-container" style="display:none;">
-    
-    <!-- PATIENT INFO BAR -->
-    <div id="patient-bar" style="
-        background:#ffffff;
-        padding:15px 25px;
-        margin-bottom:25px;
-        border-radius:12px;
-        box-shadow:0 4px 10px rgba(0,0,0,0.08);
-        font-weight:600;
-    ">
-        Patient: <span id="pName"></span> |
-        Age: <span id="pAge"></span> |
-        Contact: <span id="pContact"></span>
-    </div>
+        <div id="patient-bar" style="
+            background:#ffffff;
+            padding:15px 25px;
+            margin-bottom:25px;
+            border-radius:12px;
+            box-shadow:0 4px 10px rgba(0,0,0,0.08);
+            font-weight:600;
+        ">
+            Patient: <span id="pName"></span> |
+            Age: <span id="pAge"></span> |
+            Contact: <span id="pContact"></span>
+        </div>
+        
         <div class="main-layout">
-            <!-- Systemic Box -->
             <div class="symptom-box box-systemic">
                 <h3>Systemic</h3>
                 <div class="symptom-list-container">
@@ -560,7 +545,6 @@
                 </div>
             </div>
             
-            <!-- Movement Box -->
             <div class="symptom-box box-movement">
                 <h3>Movement</h3>
                 <div class="symptom-list-container">
@@ -577,7 +561,6 @@
                 </div>
             </div>
             
-            <!-- Updated Chart Container with perfect centering -->
             <div class="chart-container" id="chart-container">
                 <div class="q-systemic"><div class="quadrant-label">Systemic</div></div>
                 <div class="q-movement"><div class="quadrant-label">Movement</div></div>
@@ -586,7 +569,6 @@
                 <div class="circular-divider"></div>
             </div>
             
-            <!-- Muscular Box -->
             <div class="symptom-box box-muscular">
                 <h3>Muscular</h3>
                 <div class="symptom-list-container">
@@ -599,7 +581,6 @@
                 </div>
             </div>
             
-            <!-- Sensory Box -->
             <div class="symptom-box box-sensory">
                 <h3>Sensory & Behavioral</h3>
                 <div class="symptom-list-container">
@@ -614,7 +595,6 @@
                 </div>
             </div>
             
-            <!-- Controls -->
             <div class="controls">
                 <button id="calculate-button" class="action-button">CALCULATE</button>
                 
@@ -630,7 +610,9 @@
                     <div id="score-detail" class="score-detail">Symptoms selected: 0 out of 24</div>
                     <button id="nmgd-status-button">Likely NMGD Negative</button>
                 </div>
-		<button id="go-to-step2-button" class="action-button" style="background-color: var(--primary-blue);">Click here to know the specific condition of NMGD
+
+                <button id="go-to-step2-button" class="action-button" style="background-color: var(--primary-blue);">
+                    Click here to know the specific condition of NMGD
                 </button>
             </div>
         </div>
@@ -696,7 +678,7 @@
 
                 scoreText.textContent = `${roundedPercentage}%`;
                 scoreDetail.textContent = `Symptoms selected: ${totalScore} out of ${TOTAL_SYMPTOMS}`;
-                
+                    
                 const statusText = isPositive ? "Likely NMGD Positive" : "Likely NMGD Negative";
                 statusButton.textContent = statusText;
                 
@@ -704,6 +686,21 @@
                 statusButton.classList.add(isPositive ? 'status-positive' : 'status-negative');
 
                 chartContainer.style.borderColor = isPositive ? 'var(--success-green)' : 'var(--warning-yellow)';
+
+                // Save results
+                localStorage.setItem("step1Score", roundedPercentage + "%");
+                localStorage.setItem("step1Status", statusText);
+                localStorage.setItem("step1TotalSymptoms", TOTAL_SYMPTOMS);
+                localStorage.setItem("step1SelectedCount", totalScore);
+
+                const selectedSymptoms = [];
+                checkboxes.forEach(cb => {
+                    if (cb.checked) {
+                        const label = cb.nextElementSibling?.textContent?.trim();
+                        if (label) selectedSymptoms.push(label);
+                    }
+                });
+                localStorage.setItem("step1Symptoms", JSON.stringify(selectedSymptoms));
             };
 
             checkboxes.forEach(checkbox => {
@@ -721,47 +718,49 @@
             updateScore();
             chartContainer.style.borderColor = 'var(--border-color)';
         });
-	document.getElementById('go-to-step2-button').addEventListener('click', () => {window.location.href = 'step2.html';});
-	function launchTool() {
-    const name = document.getElementById("patientName").value.trim();
-    const age = document.getElementById("patientAge").value.trim();
-    const contact = document.getElementById("patientContact").value.trim();
 
-    if (!name || !age || !contact) {
-        alert("Please fill all patient details.");
-        return;
-    }
+        document.getElementById('go-to-step2-button').addEventListener('click', () => {
+            window.location.href = 'step2.html';
+        });
 
-    localStorage.setItem("patientName", name);
-    localStorage.setItem("patientAge", age);
-    localStorage.setItem("patientContact", contact);
+        function launchTool() {
+            const name = document.getElementById("patientName").value.trim();
+            const age = document.getElementById("patientAge").value.trim();
+            const contact = document.getElementById("patientContact").value.trim();
 
-    showTool();
-}
+            if (!name || !age || !contact) {
+                alert("Please fill all patient details.");
+                return;
+            }
 
-function showTool() {
-    const name = localStorage.getItem("patientName");
-    const age = localStorage.getItem("patientAge");
-    const contact = localStorage.getItem("patientContact");
+            localStorage.setItem("patientName", name);
+            localStorage.setItem("patientAge", age);
+            localStorage.setItem("patientContact", contact);
 
-    if (!name || !age || !contact) return;
+            showTool();
+        }
 
-    document.getElementById("patient-profile").style.display = "none";
-    document.getElementById("tool-container").style.display = "block";
+        function showTool() {
+            const name = localStorage.getItem("patientName");
+            const age = localStorage.getItem("patientAge");
+            const contact = localStorage.getItem("patientContact");
 
-    document.getElementById("pName").textContent = name;
-    document.getElementById("pAge").textContent = age;
-    document.getElementById("pContact").textContent = contact;
-}
+            if (!name || !age || !contact) return;
 
-// Auto-resume if already filled
-document.addEventListener("DOMContentLoaded", () => {
-    if (localStorage.getItem("patientName")) {
-        showTool();
-    }
-});
+            document.getElementById("patient-profile").style.display = "none";
+            document.getElementById("tool-container").style.display = "block";
 
+            document.getElementById("pName").textContent = name;
+            document.getElementById("pAge").textContent = age;
+            document.getElementById("pContact").textContent = contact;
+        }
+
+        // Auto-resume if already filled
+        document.addEventListener("DOMContentLoaded", () => {
+            if (localStorage.getItem("patientName")) {
+                showTool();
+            }
+        });
     </script>
 </body>
-
 </html>
