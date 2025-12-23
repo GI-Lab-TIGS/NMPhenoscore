@@ -635,7 +635,7 @@ async function generateFinalNMPhenoscorePDF() {
     matchedSymptoms.forEach(item => {
       if (y > 265) { pdf.addPage(); y = 20; pdf.setFontSize(9); }
       pdf.text(`• ${item.symptom}`, 30, y);
-      if (item.hpo && item.hpo !== "") {
+      if (item.hpo && item.hpo !== "N/A" && item.hpo !== "") {
         pdf.setTextColor(43, 140, 238);
         pdf.text(`(${item.hpo})`, 32 + pdf.getTextWidth(`• ${item.symptom} `), y);
         pdf.setTextColor(0, 0, 0);
