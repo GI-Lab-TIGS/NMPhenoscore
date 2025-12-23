@@ -272,7 +272,7 @@ if (top_condition && matched_symptoms[top_condition]) {
 }
 localStorage.setItem("step2MatchedSymptoms", JSON.stringify(step2Matched));
 
-// Other conditions
+// Other conditions (excluding top)
 const otherConditions = Object.keys(prioritized_conditions)
     .filter(c => c !== top_condition)
     .slice(0, 5);
@@ -348,6 +348,7 @@ localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
         }
 
         resultsDiv.innerHTML = `<div class="results-content">${html}</div>`;
+        document.getElementById("downloadPdfBtn").style.display = "block";
 
         // Sunburst Chart
         let labels = ["Potential Conditions"];
