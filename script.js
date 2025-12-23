@@ -457,8 +457,6 @@ function replaceSymptom(invalid, simple) {
 })();
 
 // FINAL PDF GENERATION (STEP 1 + STEP 2)
-
-
 async function generateFinalNMPhenoscorePDF() {
   if (!window.jspdf) {
     alert("jsPDF not loaded");
@@ -470,123 +468,247 @@ async function generateFinalNMPhenoscorePDF() {
 
   let y = 15;
 
-
-//     PAGE 1 – STEP 1 RESULT
-
-  pdf.setFontSize(16);
-  pdf.text("NMPhenoscore – Patient Report", 105, y, { align: "center" });
-  y += 12;
-
-  pdf.setFontSize(11);
-
-  // Patient profile
+  // Retrieve patient data
   const patientName = localStorage.getItem("patientName") || "N/A";
   const patientAge = localStorage.getItem("patientAge") || "N/A";
   const patientContact = localStorage.getItem("patientContact") || "N/A";
-
-  pdf.setFont(undefined, "bold");
-  pdf.text("Patient Profile", 15, y);
-  pdf.setFont(undefined, "normal");
-  y += 6;
-
-  pdf.text(`Name: ${patientName}`, 15, y); y += 5;
-  pdf.text(`Age: ${patientAge}`, 15, y); y += 5;
-  pdf.text(`Contact: ${patientContact}`, 15, y);
-  y += 10;
-
-  // Step 1 assessment
   const score = localStorage.getItem("step1Score") || "0%";
   const status = localStorage.getItem("step1Status") || "N/A";
-  const selectedCount = localStorage.getItem("step1SelectedCount") || "0";
-  const totalCount = localStorage.getItem("step1TotalSymptoms") || "0";
+  const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
+  const topCondition = localStorage.getItem("step2TopCondition") || "N/A";
+  const matchedSymptoms = JSON.parse(localStorage.getItem("step2MatchedSymptoms") || "[]");
+  const otherConditions = JSON.parse(localStorage.getItem("step2OtherConditions") || "[]");
 
-  pdf.setFont(undefined, "bold");
-  pdf.text("Initial Screening Result", 15, y);
-  pdf.setFont(undefined, "normal");
-  y += 6;
+  // ===== HEADER SECTION =====
+  pdf.setFontSize(20);
+  pdf.setFont(undefined, 'bold');
+  pdf.setTextColor(0, 0, 0);
+  pdf.text("NMPhenoscore DIAGNOSTIC REPORT", 105, y, { align: "center" });
+  y += 8;
+  
+  pdf.setFontSize(12);
+  pdf.setFont(undefined, 'normal');
+  pdf.setTextColor(60, 60, 60);
+  pdf.text("Neuromuscular Genetic Disorder Assessment", 105, y, { align: "center" });
+  y += 12;
+  
+  // Horizontal line
+  pdf.setDrawColor(43, 140, 238);
+  pdf.setLineWidth(0.5);
+  pdf.line(20, y, 190, y);
+  y += 10;
 
-  pdf.text(`NMPhenoscore: ${score}`, 15, y); y += 5;
-  pdf.text(`Status: ${status}`, 15, y); y += 5;
-  pdf.text(`Symptoms Selected: ${selectedCount} / ${totalCount}`, 15, y);
+  // ===== PATIENT INFORMATION BOX =====
+  pdf.setFillColor(245, 247, 250);
+  pdf.rect(20, y, 170, 32, 'F');
+  
+  pdf.setFontSize(11);
+  pdf.setFont(undefined, 'bold');
+  pdf.setTextColor(0, 0, 0);
+  pdf.text("PATIENT INFORMATION", 25, y + 6);
+  
+  pdf.setFont(undefined, 'normal');
+  pdf.setFontSize(10);
+  y += 12;
+  
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Patient Name:", 25, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(patientName, 60, y);
+  
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Age:", 120, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(`${patientAge} years`, 135, y);
+  y += 7;
+  
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Contact:", 25, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(patientContact, 60, y);
+  
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Report Date:", 120, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(new Date().toLocaleDateString('en-GB'), 155, y);
+  y += 15;
+
+  // ===== SECTION 1: INITIAL SCREENING =====
+  pdf.setFontSize(13);
+  pdf.setFont(undefined, 'bold');
+  pdf.setTextColor(43, 140, 238);
+  pdf.text("1. INITIAL SCREENING FOR NMGD", 20, y);
+  y += 8;
+  
+  pdf.setFontSize(10);
+  pdf.setTextColor(0, 0, 0);
+  
+  // Assessment boxes (side by side)
+  pdf.setFillColor(245, 245, 245);
+  pdf.rect(25, y, 80, 18, 'F');
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Assessment Result:", 30, y + 6);
+  pdf.setFont(undefined, 'normal');
+  const resultColor = status.includes('Positive') ? [220, 38, 38] : [34, 197, 94];
+  pdf.setTextColor(...resultColor);
+  pdf.text(status, 30, y + 13);
+  
+  pdf.setFontSize(10);
+  pdf.setTextColor(0, 0, 0);
+  pdf.setFillColor(240, 248, 255);
+  pdf.rect(110, y, 80, 18, 'F');
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Assessment Score:", 115, y + 6);
+  pdf.setFontSize(14);
+  pdf.setTextColor(43, 140, 238);
+  pdf.text(score, 115, y + 13);
+  pdf.setTextColor(0, 0, 0);
+  pdf.setFontSize(10);
+  y += 25;
+
+  // Clinical presentation (two columns)
+  if (step1Symptoms.length > 0) {
+    pdf.setFont(undefined, 'bold');
+    pdf.text(`Clinical Presentation (${step1Symptoms.length} symptoms identified):`, 25, y);
+    y += 6;
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(9);
+    
+    const leftColumnX = 30;
+    const rightColumnX = 110;
+    const columnWidth = 75;
+    let leftY = y;
+    let rightY = y;
+    
+    step1Symptoms.forEach((symptom, idx) => {
+      if (idx % 2 === 0) {
+        if (leftY > 265) { pdf.addPage(); leftY = 20; rightY = 20; pdf.setFontSize(9); }
+        const wrappedText = pdf.splitTextToSize(`• ${symptom}`, columnWidth);
+        pdf.text(wrappedText, leftColumnX, leftY);
+        leftY += wrappedText.length * 5;
+      } else {
+        if (rightY > 265) { pdf.addPage(); leftY = 20; rightY = 20; pdf.setFontSize(9); }
+        const wrappedText = pdf.splitTextToSize(`• ${symptom}`, columnWidth);
+        pdf.text(wrappedText, rightColumnX, rightY);
+        rightY += wrappedText.length * 5;
+      }
+    });
+    
+    y = Math.max(leftY, rightY) + 5;
+  }
+
+  // ===== SECTION 2: DIFFERENTIAL DIAGNOSIS =====
+  if (y > 250) { pdf.addPage(); y = 20; }
+  
+  pdf.setFontSize(13);
+  pdf.setFont(undefined, 'bold');
+  pdf.setTextColor(43, 140, 238);
+  pdf.text("2. CONDITION SPECIFIC DIAGNOSIS", 20, y);
   y += 8;
 
-  // Selected symptoms list
-  const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
-
-  pdf.setFont(undefined, "bold");
-  pdf.text("Selected Symptoms", 15, y);
-  pdf.setFont(undefined, "normal");
-  y += 6;
-
-  step1Symptoms.forEach(symptom => {
-    if (y > 280) {
-      pdf.addPage();
-      y = 15;
-    }
-    pdf.text(`• ${symptom}`, 18, y);
-    y += 5;
-  });
-
-  //     PAGE 2 – STEP 2 RESULT
-
-
-  pdf.addPage();
-  y = 15;
-
-  pdf.setFontSize(14);
-  pdf.text("Specific NMGD Prediction", 105, y, { align: "center" });
-  y += 10;
-
+  // Primary diagnosis box
+  pdf.setFontSize(10);
+  pdf.setTextColor(0, 0, 0);
+  pdf.setFillColor(240, 253, 244);
+  pdf.setDrawColor(34, 197, 94);
+  pdf.setLineWidth(1);
+  pdf.rect(20, y, 170, 20, 'FD');
+  
+  pdf.setFont(undefined, 'bold');
   pdf.setFontSize(11);
+  pdf.text("PRIMARY RECOMMENDATION:", 25, y + 7);
+  pdf.setFontSize(12);
+  pdf.setTextColor(22, 163, 74);
+  pdf.text(topCondition, 25, y + 15);
+  pdf.setTextColor(0, 0, 0);
+  y += 28;
 
-  const topCondition = localStorage.getItem("step2TopCondition") || "N/A";
-  const matchedSymptoms = JSON.parse(
-    localStorage.getItem("step2MatchedSymptoms") || "[]"
-  );
-  const otherConditions = JSON.parse(
-    localStorage.getItem("step2OtherConditions") || "[]"
-  );
-
-  pdf.setFont(undefined, "bold");
-  pdf.text("Top Recommended Condition", 15, y);
-  pdf.setFont(undefined, "normal");
+  // Matched symptoms with HPO
+  pdf.setFontSize(10);
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Matched Clinical Features:", 25, y);
   y += 6;
-
-  pdf.text(topCondition, 18, y);
-  y += 10;
-
-  pdf.setFont(undefined, "bold");
-  pdf.text("Matched Symptoms (HPO)", 15, y);
-  pdf.setFont(undefined, "normal");
-  y += 6;
-
-  matchedSymptoms.forEach(item => {
-    if (y > 280) {
-      pdf.addPage();
-      y = 15;
-    }
-    pdf.text(`• ${item.symptom} (${item.hpo})`, 18, y);
+  
+  pdf.setFont(undefined, 'normal');
+  pdf.setFontSize(9);
+  
+  if (matchedSymptoms.length > 0) {
+    matchedSymptoms.forEach(item => {
+      if (y > 265) { pdf.addPage(); y = 20; pdf.setFontSize(9); }
+      pdf.text(`• ${item.symptom}`, 30, y);
+      pdf.setTextColor(43, 140, 238);
+      pdf.text(`(${item.hpo})`, 32 + pdf.getTextWidth(`• ${item.symptom} `), y);
+      pdf.setTextColor(0, 0, 0);
+      y += 5;
+    });
+  } else {
+    pdf.text("No specific clinical correlations identified", 30, y);
     y += 5;
-  });
+  }
+  y += 8;
+  
+  // ===== SECTION 3: OTHER CONDITIONS =====
+  if (y > 245) { pdf.addPage(); y = 20; }
+  
+  pdf.setFontSize(13);
+  pdf.setFont(undefined, 'bold');
+  pdf.setTextColor(43, 140, 238);
+  pdf.text("3. OTHER POSSIBLE DIAGNOSTIC CONSIDERATIONS", 20, y);
+  y += 8;
 
-  y += 6;
+  pdf.setFontSize(10);
+  pdf.setTextColor(0, 0, 0);
+  
+  if (otherConditions.length > 0) {
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(9);
+    
+    otherConditions.forEach((cond, idx) => {
+      if (y > 265) { pdf.addPage(); y = 20; }
+      pdf.setFont(undefined, 'bold');
+      pdf.text(`${idx + 1}. ${cond}`, 25, y);
+      pdf.setFont(undefined, 'normal');
+      y += 6;
+    });
+  } else {
+    pdf.setFont(undefined, 'normal');
+    pdf.text("No alternative diagnoses identified with significant correlation", 25, y);
+    y += 6;
+  }
+  y += 8;
 
-  pdf.setFont(undefined, "bold");
-  pdf.text("Other Possible Conditions", 15, y);
-  pdf.setFont(undefined, "normal");
-  y += 6;
+  // ===== DISCLAIMER =====
+  if (y > 250) { pdf.addPage(); y = 20; }
+  
+  pdf.setFillColor(255, 250, 240);
+  pdf.rect(20, y, 170, 30, 'F');
+  
+  pdf.setFontSize(10);
+  pdf.setFont(undefined, 'bold');
+  pdf.text("IMPORTANT CLINICAL DISCLAIMER", 25, y + 7);
+  
+  pdf.setFont(undefined, 'normal');
+  pdf.setFontSize(8);
+  pdf.setTextColor(80, 80, 80);
+  
+  const disclaimer = "This report provides a computational analysis based on phenotypic presentation and should not replace comprehensive clinical evaluation. Final diagnosis must be confirmed through appropriate clinical, laboratory, and genetic testing. This tool is designed to assist in prioritizing differential diagnoses and should be interpreted in conjunction with complete medical history, physical examination, and additional diagnostic investigations.";
+  
+  const disclaimerLines = pdf.splitTextToSize(disclaimer, 160);
+  pdf.text(disclaimerLines, 25, y + 14);
+  y += 35;
+  
+  // ===== FOOTER =====
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(20, y, 190, y);
+  y += 5;
+  
+  pdf.setFontSize(8);
+  pdf.setTextColor(120, 120, 120);
+  pdf.text("NMPhenoscore Clinical Decision Support System", 105, y, { align: "center" });
+  y += 4;
+  pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
 
-  otherConditions.forEach(cond => {
-    if (y > 280) {
-      pdf.addPage();
-      y = 15;
-    }
-    pdf.text(`• ${cond}`, 18, y);
-    y += 5;
-  });
-
-//     SAVE FILE
-
+  // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
 }
