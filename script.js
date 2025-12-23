@@ -456,7 +456,6 @@ function replaceSymptom(invalid, simple) {
     else resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
 })();
 
-// FINAL PDF GENERATION (STEP 1 + STEP 2)
 async function generateFinalNMPhenoscorePDF() {
   if (!window.jspdf) {
     alert("jsPDF not loaded");
@@ -636,9 +635,11 @@ async function generateFinalNMPhenoscorePDF() {
     matchedSymptoms.forEach(item => {
       if (y > 265) { pdf.addPage(); y = 20; pdf.setFontSize(9); }
       pdf.text(`• ${item.symptom}`, 30, y);
-      pdf.setTextColor(43, 140, 238);
-      pdf.text(`(${item.hpo})`, 32 + pdf.getTextWidth(`• ${item.symptom} `), y);
-      pdf.setTextColor(0, 0, 0);
+      if (item.hpo && item.hpo !== "N/A") {
+        pdf.setTextColor(43, 140, 238);
+        pdf.text(`(${item.hpo})`, 32 + pdf.getTextWidth(`• ${item.symptom} `), y);
+        pdf.setTextColor(0, 0, 0);
+      }
       y += 5;
     });
   } else {
