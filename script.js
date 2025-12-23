@@ -349,8 +349,19 @@ localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
         }
 
         resultsDiv.innerHTML = `<div class="results-content">${html}</div>`;
-        document.getElementById("downloadPdfBtn").style.display = "block";
+        // ===== PDF DOWNLOAD BUTTON EVENT =====
+        setTimeout(() => {
+            const pdfBtn = document.getElementById("downloadPdfBtn");
+            if (pdfBtn) {
+                pdfBtn.style.display = "block";
+                pdfBtn.addEventListener('click', generateFinalNMPhenoscorePDF);
+                console.log("PDF download button activated");
+            } else {
+                console.warn("downloadPdfBtn not found");
+            }
+        }, 100);
 
+        
         // Sunburst Chart
         let labels = ["Potential Conditions"];
         let parents = [""];
@@ -448,6 +459,33 @@ function replaceSymptom(invalid, simple) {
         updateAddedList();
         if (confirm(`Replaced '${invalid}' with '${simple}'. Re-analyze?`)) analyzeBtn.click();
     }
+}
+// File upload handler for images
+const fileInput = document.getElementById('imageUpload');
+if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        let loadedCount = 0;
+        
+        Array.from(files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImages.push(event.target.result);
+                    loadedCount++;
+                    console.log(`Image loaded: ${file.name} (${loadedCount}/${files.length})`);
+                };
+                reader.onerror = () => {
+                    console.error(`Failed to load image: ${file.name}`);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                console.warn(`Skipped non-image file: ${file.name}`);
+            }
+        });
+    });
+} else {
+    console.warn("imageUpload input element not found");
 }
 
 // Initialize
@@ -711,29 +749,47 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
   
   // ===== APPEND UPLOADED IMAGES =====
-  if (uploadedImages.length > 0) {
-    pdf.addPage();
-    y = 20;
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, "bold");
-    pdf.setTextColor(0, 0, 0);
-    pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
-    y += 10;
-    
-    for (let i = 0; i < uploadedImages.length; i++) {
-      if (y > 240) {
-        pdf.addPage();
-        y = 20;
+    if (uploadedImages.length > 0) {
+      console.log(`Adding ${uploadedImages.length} images to PDF...`);
+      pdf.addPage();
+      y = 20;
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, "bold");
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
+      y += 10;
+      
+      for (let i = 0; i < uploadedImages.length; i++) {
+        if (y > 240) {
+          pdf.addPage();
+          y = 20;
+        }
+        try {
+          const imgData = uploadedImages[i];
+          const imgType = imgData.includes("data:image/png") ? "PNG" : "JPEG";
+          const imgProps = pdf.getImageProperties(imgData);
+          const pageWidth = 170;
+          const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+          
+          // Limit image height to prevent overflow
+          const maxHeight = 200;
+          const finalHeight = Math.min(imgHeight, maxHeight);
+          const finalWidth = finalHeight === maxHeight ? (imgProps.width * maxHeight) / imgProps.height : pageWidth;
+          
+          pdf.addImage(imgData, imgType, 20, y, finalWidth, finalHeight, undefined, "FAST");
+          y += finalHeight + 10;
+          console.log(`Added image ${i + 1}/${uploadedImages.length}`);
+        } catch (imgError) {
+          console.error(`Error adding image ${i + 1}:`, imgError);
+          pdf.setFontSize(10);
+          pdf.setTextColor(200, 0, 0);
+          pdf.text(`[Image ${i + 1} could not be loaded]`, 20, y);
+          y += 10;
+        }
       }
-      const imgData = uploadedImages[i];
-      const imgType = imgData.startsWith("data:image/png") ? "PNG" : "JPEG";
-      const imgProps = pdf.getImageProperties(imgData);
-      const pageWidth = 170;
-      const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
-      pdf.addImage(imgData, imgType, 20, y, pageWidth, imgHeight, undefined, "FAST");
-      y += imgHeight + 10;
+    } else {
+      console.log("No images to add to PDF");
     }
-  }
   // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
