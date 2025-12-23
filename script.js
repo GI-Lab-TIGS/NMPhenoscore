@@ -8,7 +8,7 @@ let symptomConditionDf = null;
 let allSymptoms = [];
 let symptomMapping = {};
 let conditionUrls = {};
-let uploadedImages = [];
+let uploadedItems = [];
 
 // Function to compute LCS length
 function lcsLength(s1, s2) {
@@ -153,6 +153,25 @@ const addedList = document.getElementById('addedSymptoms');
 const analyzeBtn = document.getElementById('analyzeBtn');
 const resultsDiv = document.getElementById('results');
 const clearBtn = document.getElementById('clearSymptoms');
+const fileInput = document.getElementById("imageUpload");
+const previewContainer = document.getElementById("uploadPreview");
+
+if (fileInput) {
+  fileInput.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files);
+
+    for (const file of files) {
+      if (file.type.startsWith("image/")) {
+        handleImageFile(file);
+      } else if (file.type === "application/pdf") {
+        await handlePdfFile(file);
+      }
+    }
+
+    fileInput.value = "";
+  });
+}
+
 
 // Add symptom
 addBtn.addEventListener('click', addSymptom);
@@ -460,33 +479,70 @@ function replaceSymptom(invalid, simple) {
         if (confirm(`Replaced '${invalid}' with '${simple}'. Re-analyze?`)) analyzeBtn.click();
     }
 }
-// File upload handler for images
-const fileInput = document.getElementById('imageUpload');
-if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        let loadedCount = 0;
-        
-        Array.from(files).forEach(file => {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    uploadedImages.push(event.target.result);
-                    loadedCount++;
-                    console.log(`Image loaded: ${file.name} (${loadedCount}/${files.length})`);
-                };
-                reader.onerror = () => {
-                    console.error(`Failed to load image: ${file.name}`);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                console.warn(`Skipped non-image file: ${file.name}`);
-            }
-        });
+
+function handleImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    uploadedItems.push({
+      id: crypto.randomUUID(),
+      type: "image",
+      dataUrl: reader.result,
+      name: file.name
     });
-} else {
-    console.warn("imageUpload input element not found");
+    renderPreview();
+  };
+  reader.readAsDataURL(file);
 }
+async function handlePdfFile(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 2 });
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({ canvasContext: ctx, viewport }).promise;
+
+    uploadedItems.push({
+      id: crypto.randomUUID(),
+      type: "image",
+      dataUrl: canvas.toDataURL("image/png"),
+      name: `${file.name} (page ${i})`
+    });
+  }
+
+  renderPreview();
+}
+function renderPreview() {
+  previewContainer.innerHTML = "";
+
+  uploadedItems.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "preview-item";
+
+    const img = document.createElement("img");
+    img.src = item.dataUrl;
+
+    const btn = document.createElement("button");
+    btn.className = "remove-btn";
+    btn.textContent = "✖";
+    btn.onclick = () => {
+      uploadedItems = uploadedItems.filter(i => i.id !== item.id);
+      renderPreview();
+    };
+
+    div.appendChild(img);
+    div.appendChild(btn);
+    previewContainer.appendChild(div);
+  });
+}
+
 
 // Initialize
 (async () => {
@@ -747,49 +803,32 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("NMPhenoscore Clinical Decision Support System", 105, y, { align: "center" });
   y += 4;
   pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
-  
-  // ===== APPEND UPLOADED IMAGES =====
-    if (uploadedImages.length > 0) {
-      console.log(`Adding ${uploadedImages.length} images to PDF...`);
+    
+  // ===== APPEND UPLOADED FILES =====
+if (uploadedItems.length > 0) {
+  pdf.addPage();
+  let y = 20;
+
+  pdf.setFontSize(14);
+  pdf.setFont(undefined, "bold");
+  pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
+  y += 10;
+
+  for (const item of uploadedItems) {
+    if (y > 240) {
       pdf.addPage();
       y = 20;
-      pdf.setFontSize(14);
-      pdf.setFont(undefined, "bold");
-      pdf.setTextColor(0, 0, 0);
-      pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
-      y += 10;
-      
-      for (let i = 0; i < uploadedImages.length; i++) {
-        if (y > 240) {
-          pdf.addPage();
-          y = 20;
-        }
-        try {
-          const imgData = uploadedImages[i];
-          const imgType = imgData.includes("data:image/png") ? "PNG" : "JPEG";
-          const imgProps = pdf.getImageProperties(imgData);
-          const pageWidth = 170;
-          const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
-          
-          // Limit image height to prevent overflow
-          const maxHeight = 200;
-          const finalHeight = Math.min(imgHeight, maxHeight);
-          const finalWidth = finalHeight === maxHeight ? (imgProps.width * maxHeight) / imgProps.height : pageWidth;
-          
-          pdf.addImage(imgData, imgType, 20, y, finalWidth, finalHeight, undefined, "FAST");
-          y += finalHeight + 10;
-          console.log(`Added image ${i + 1}/${uploadedImages.length}`);
-        } catch (imgError) {
-          console.error(`Error adding image ${i + 1}:`, imgError);
-          pdf.setFontSize(10);
-          pdf.setTextColor(200, 0, 0);
-          pdf.text(`[Image ${i + 1} could not be loaded]`, 20, y);
-          y += 10;
-        }
-      }
-    } else {
-      console.log("No images to add to PDF");
     }
+
+    const props = pdf.getImageProperties(item.dataUrl);
+    const w = 170;
+    const h = (props.height * w) / props.width;
+
+    pdf.addImage(item.dataUrl, "PNG", 20, y, w, h, undefined, "FAST");
+    y += h + 10;
+  }
+}
+   
   // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
