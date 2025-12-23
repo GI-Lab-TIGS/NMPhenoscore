@@ -250,6 +250,34 @@ analyzeBtn.addEventListener('click', async () => {
             matched_symptoms = matched;
             top_condition = Object.keys(scores)[0] || "";
         }
+        
+        // ===== STORE STEP 2 RESULTS FOR PDF =====
+
+// Top condition
+localStorage.setItem("step2TopCondition", top_condition || "N/A");
+
+// Matched symptoms with HPO
+const step2Matched = [];
+if (top_condition && matched_symptoms[top_condition]) {
+    matched_symptoms[top_condition].forEach(sym => {
+        const full = symptomConditionDf.symptoms.find(s =>
+            s.toLowerCase().includes(sym.toLowerCase())
+        );
+        const hpoMatch = full?.match(/\(HP:\d+\)/);
+        step2Matched.push({
+            symptom: sym,
+            hpo: hpoMatch ? hpoMatch[0].replace(/[()]/g, "") : "N/A"
+        });
+    });
+}
+localStorage.setItem("step2MatchedSymptoms", JSON.stringify(step2Matched));
+
+// Other conditions
+const otherConditions = Object.keys(prioritized_conditions)
+    .filter(c => c !== top_condition)
+    .slice(0, 5);
+localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
+       
 
         const data = {
             valid_symptoms,
