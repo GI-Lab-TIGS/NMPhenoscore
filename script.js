@@ -484,7 +484,7 @@ function handleImageFile(file) {
   const reader = new FileReader();
   reader.onload = () => {
     uploadedItems.push({
-      id: crypto.randomUUID(),
+      id: Date.now() + Math.random(),
       type: "image",
       dataUrl: reader.result,
       name: file.name
@@ -532,7 +532,8 @@ function renderPreview() {
     const btn = document.createElement("button");
     btn.className = "remove-btn";
     btn.textContent = "✖";
-    btn.onclick = () => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
       uploadedItems = uploadedItems.filter(i => i.id !== item.id);
       renderPreview();
     };
