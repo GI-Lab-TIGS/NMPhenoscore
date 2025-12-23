@@ -9,26 +9,29 @@ let allSymptoms = [];
 let symptomMapping = {};
 let conditionUrls = {};
 let uploadedImages = [];
+let pendingImageLoads = 0;
+
 
 // Handle image uploads
 function handleImageUpload(event) {
     const files = event.target.files;
-    if (!files || files.length === 0) return;
-    
+    if (!files) return;
+
+    pendingImageLoads += files.length;
+
     Array.from(files).forEach(file => {
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                uploadedImages.push(e.target.result);
-                console.log(`Image uploaded: ${file.name}`);
-                updateImagePreview();
-            };
-            reader.readAsDataURL(file);
-        } else {
-            alert(`File ${file.name} is not an image and was skipped.`);
-        }
+        if (!file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            uploadedImages.push(e.target.result);
+            pendingImageLoads--;
+            updateImagePreview();
+        };
+        reader.readAsDataURL(file);
     });
 }
+
 
 // Update image preview display
 function updateImagePreview() {
@@ -256,8 +259,14 @@ function updateAddedList() {
     addedList.innerHTML = symptoms.map((symptom, index) => 
         `<div class="symptom-item">
             <span>${symptom}</span>
-            <button type="button" onclick="removeSymptom(${index})"><i class="fas fa-times"></i></button>
+            <button type="button" data-index="${index}" class="remove-symptom-btn"><i class="fas fa-times"></i></button>
         </div>`).join('');
+    document.querySelectorAll(".remove-symptom-btn").forEach(btn => {
+        btn.addEventListener("click", e => {
+            const idx = parseInt(e.currentTarget.dataset.index, 10);
+            removeSymptom(idx);
+        });
+    });
     if (clearBtn) clearBtn.style.display = symptoms.length > 0 ? 'block' : 'none';
 }
 
@@ -419,10 +428,6 @@ if (analyzeBtn) {
 
             resultsDiv.innerHTML = `<div class="results-content">${html}</div>`;
             
-            const downloadPdfBtn = document.getElementById("downloadPdfBtn");
-            if (downloadPdfBtn) {
-                downloadPdfBtn.style.display = "block";
-            }
 
             // Sunburst Chart
             if (typeof Plotly !== 'undefined') {
@@ -529,7 +534,20 @@ function replaceSymptom(invalid, simple) {
 }
 
 // PDF Generation Function
+function setupPdfButton() {
+    const btn = document.getElementById("downloadPdfBtn");
+    if (!btn) return;
+
+    const cleanBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(cleanBtn, btn);
+
+    cleanBtn.addEventListener("click", generateFinalNMPhenoscorePDF);
+}
 async function generateFinalNMPhenoscorePDF() {
+    if (pendingImageLoads > 0) {
+    alert("Please wait, images are still loading...");
+    return;
+}
     if (!window.jspdf) {
         alert("jsPDF library not loaded. Please ensure it's included in your HTML.");
         return;
@@ -788,20 +806,29 @@ async function generateFinalNMPhenoscorePDF() {
         pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
         y += 10;
         
-        for (let i = 0; i < uploadedImages.length; i++) {
-            if (y > 240) {
-                pdf.addPage();
-                y = 20;
-            }
-            const imgData = uploadedImages[i];
-            const imgType = imgData.startsWith("data:image/png") ? "PNG" : "JPEG";
-            const imgProps = pdf.getImageProperties(imgData);
-            const pageWidth = 170;
-            const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
-            pdf.addImage(imgData, imgType, 20, y, pageWidth, imgHeight, undefined, "FAST");
-            y += imgHeight + 10;
-        }
+        for (let imgData of uploadedImages) {
+    if (y > 240) {
+        pdf.addPage();
+        y = 20;
     }
+
+    const imgProps = pdf.getImageProperties(imgData);
+    const maxWidth = 170;
+    const ratio = imgProps.height / imgProps.width;
+    const imgHeight = maxWidth * ratio;
+
+    pdf.addImage(
+        imgData,
+        imgData.includes("png") ? "PNG" : "JPEG",
+        20,
+        y,
+        maxWidth,
+        imgHeight
+    );
+
+    y += imgHeight + 10;
+}
+console.log("Images in PDF:", uploadedImages.length);
     
     // Save file
     const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
@@ -813,18 +840,14 @@ window.removeSymptom = removeSymptom;
 window.replaceSymptom = replaceSymptom;
 window.generateFinalNMPhenoscorePDF = generateFinalNMPhenoscorePDF;
 window.handleImageUpload = handleImageUpload;
+window.addEventListener("DOMContentLoaded", setupPdfButton);
+
 
 // Initialize on page load
 (async () => {
     const loaded = await loadData();
     if (loaded) {
         await fetchAllSymptoms();
-        
-        // Setup PDF download button listener ONLY if it doesn't have onclick in HTML
-        const downloadPdfBtn = document.getElementById("downloadPdfBtn");
-        if (downloadPdfBtn && !downloadPdfBtn.onclick) {
-            downloadPdfBtn.addEventListener('click', generateFinalNMPhenoscorePDF);
-        }
     } else {
         if (resultsDiv) {
             resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
