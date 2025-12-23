@@ -259,6 +259,42 @@ analyzeBtn.addEventListener('click', async () => {
             matched_symptoms,
             top_condition
         };
+        
+        //SAVE STEP-2 RESULTS FOR PDF
+localStorage.setItem("step2TopCondition", data.top_condition || "");
+
+// Matched symptoms with HPO (for top condition only)
+if (data.top_condition && data.matched_symptoms[data.top_condition]) {
+    const matchedWithHPO = [];
+
+    symptomConditionDf.symptoms.forEach(sym => {
+        const simple = extractSymptomName(sym);
+        if (data.matched_symptoms[data.top_condition].includes(simple)) {
+            const hpoMatch = sym.match(/\(HP:\d+\)/);
+            matchedWithHPO.push({
+                symptom: simple,
+                hpo: hpoMatch ? hpoMatch[0].replace(/[()]/g, '') : ''
+            });
+        }
+    });
+
+    localStorage.setItem(
+        "step2MatchedSymptoms",
+        JSON.stringify(matchedWithHPO)
+    );
+} else {
+    localStorage.setItem("step2MatchedSymptoms", JSON.stringify([]));
+}
+
+// Other conditions (excluding top)
+const otherConditions = Object.keys(data.prioritized_conditions || {})
+    .filter(c => c !== data.top_condition)
+    .slice(0, 5);
+
+localStorage.setItem(
+    "step2OtherConditions",
+    JSON.stringify(otherConditions)
+);
 
         let html = `<h3>Prioritized conditions (based on ${data.valid_symptoms?.length || 0} symptoms):</h3>`;
         
@@ -426,3 +462,136 @@ function replaceSymptom(invalid, simple) {
     if (loaded) await fetchAllSymptoms();
     else resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
 })();
+
+//FINAL PDF GENERATION (STEP 1 + STEP 2)
+
+async function generateFinalNMPhenoscorePDF() {
+  if (!window.jspdf) {
+    alert("jsPDF not loaded");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "mm", "a4");
+
+  let y = 15;
+
+//PAGE 1 – STEP 1 RESULT
+
+  pdf.setFontSize(16);
+  pdf.text("NMPhenoscore – Patient Report", 105, y, { align: "center" });
+  y += 12;
+
+  pdf.setFontSize(11);
+
+  // Patient profile
+  const patientName = localStorage.getItem("patientName") || "N/A";
+  const patientAge = localStorage.getItem("patientAge") || "N/A";
+  const patientContact = localStorage.getItem("patientContact") || "N/A";
+
+  pdf.setFont(undefined, "bold");
+  pdf.text("Patient Profile", 15, y);
+  pdf.setFont(undefined, "normal");
+  y += 6;
+
+  pdf.text(`Name: ${patientName}`, 15, y); y += 5;
+  pdf.text(`Age: ${patientAge}`, 15, y); y += 5;
+  pdf.text(`Contact: ${patientContact}`, 15, y);
+  y += 10;
+
+  // Step 1 assessment
+  const score = localStorage.getItem("step1Score") || "0%";
+  const status = localStorage.getItem("step1Status") || "N/A";
+  const selectedCount = localStorage.getItem("step1SelectedCount") || "0";
+  const totalCount = localStorage.getItem("step1TotalSymptoms") || "0";
+
+  pdf.setFont(undefined, "bold");
+  pdf.text("Initial Screening Result", 15, y);
+  pdf.setFont(undefined, "normal");
+  y += 6;
+
+  pdf.text(`NMPhenoscore: ${score}`, 15, y); y += 5;
+  pdf.text(`Status: ${status}`, 15, y); y += 5;
+  pdf.text(`Symptoms Selected: ${selectedCount} / ${totalCount}`, 15, y);
+  y += 8;
+
+  // Selected symptoms list
+  const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
+
+  pdf.setFont(undefined, "bold");
+  pdf.text("Selected Symptoms", 15, y);
+  pdf.setFont(undefined, "normal");
+  y += 6;
+
+  step1Symptoms.forEach(symptom => {
+    if (y > 280) {
+      pdf.addPage();
+      y = 15;
+    }
+    pdf.text(`• ${symptom}`, 18, y);
+    y += 5;
+  });
+
+//PAGE 2 – STEP 2 RESULT
+
+
+  pdf.addPage();
+  y = 15;
+
+  pdf.setFontSize(14);
+  pdf.text("Specific NMGD Prediction", 105, y, { align: "center" });
+  y += 10;
+
+  pdf.setFontSize(11);
+
+  const topCondition = localStorage.getItem("step2TopCondition") || "N/A";
+  const matchedSymptoms = JSON.parse(
+    localStorage.getItem("step2MatchedSymptoms") || "[]"
+  );
+  const otherConditions = JSON.parse(
+    localStorage.getItem("step2OtherConditions") || "[]"
+  );
+
+  pdf.setFont(undefined, "bold");
+  pdf.text("Top Recommended Condition", 15, y);
+  pdf.setFont(undefined, "normal");
+  y += 6;
+
+  pdf.text(topCondition, 18, y);
+  y += 10;
+
+  pdf.setFont(undefined, "bold");
+  pdf.text("Matched Symptoms (HPO)", 15, y);
+  pdf.setFont(undefined, "normal");
+  y += 6;
+
+  matchedSymptoms.forEach(item => {
+    if (y > 280) {
+      pdf.addPage();
+      y = 15;
+    }
+    pdf.text(`• ${item.symptom} (${item.hpo})`, 18, y);
+    y += 5;
+  });
+
+  y += 6;
+
+  pdf.setFont(undefined, "bold");
+  pdf.text("Other Possible Conditions", 15, y);
+  pdf.setFont(undefined, "normal");
+  y += 6;
+
+  otherConditions.forEach(cond => {
+    if (y > 280) {
+      pdf.addPage();
+      y = 15;
+    }
+    pdf.text(`• ${cond}`, 18, y);
+    y += 5;
+  });
+
+    // SAVE FILE
+
+  const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
+  pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
+}
