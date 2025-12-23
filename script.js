@@ -529,6 +529,14 @@ function renderFileList() {
     previewContainer.appendChild(row);
   });
 }
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 
 // Initialize
@@ -791,7 +799,7 @@ async function generateFinalNMPhenoscorePDF() {
   y += 4;
   pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
     
-  // ===== APPEND UPLOADED FILES =====
+// ===== APPEND UPLOADED FILES =====
 if (uploadedItems.length > 0) {
   pdf.addPage();
   let y = 20;
@@ -802,19 +810,24 @@ if (uploadedItems.length > 0) {
   y += 10;
 
   for (const item of uploadedItems) {
+    if (!item.file || !item.type.startsWith("image")) continue;
+
     if (y > 240) {
       pdf.addPage();
       y = 20;
     }
 
-    const props = pdf.getImageProperties(item.dataUrl);
+    const dataUrl = await fileToDataURL(item.file);
+
+    const props = pdf.getImageProperties(dataUrl);
     const w = 170;
     const h = (props.height * w) / props.width;
 
-    pdf.addImage(item.dataUrl, "PNG", 20, y, w, h, undefined, "FAST");
+    pdf.addImage(dataUrl, "PNG", 20, y, w, h);
     y += h + 10;
   }
 }
+
    
   // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
