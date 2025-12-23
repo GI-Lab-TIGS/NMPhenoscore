@@ -10,25 +10,6 @@ let symptomMapping = {};
 let conditionUrls = {};
 let uploadedImages = [];
 
-// Diagnostic data storage (replaces localStorage)
-const diagnosticData = {
-    patient: {
-        name: '',
-        age: '',
-        contact: ''
-    },
-    step1: {
-        score: '0%',
-        status: 'N/A',
-        symptoms: []
-    },
-    step2: {
-        topCondition: 'N/A',
-        matchedSymptoms: [],
-        otherConditions: []
-    }
-};
-
 // Function to compute LCS length
 function lcsLength(s1, s2) {
     const m = s1.length;
@@ -158,13 +139,13 @@ async function fetchAllSymptoms() {
     const simpleSymptoms = allSymptoms.map(extractSymptomName);
     const uniqueSorted = [...new Set(simpleSymptoms)].sort();
     const datalist = document.getElementById('symptomSuggestions');
-    if (datalist) {
-        uniqueSorted.forEach(sym => {
-            const option = document.createElement('option');
-            option.value = sym;
-            datalist.appendChild(option);
-        });
-    }
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    uniqueSorted.forEach(sym => {
+        const option = document.createElement('option');
+        option.value = sym;
+        datalist.appendChild(option);
+    });
 }
 
 // DOM elements
@@ -176,13 +157,6 @@ const resultsDiv = document.getElementById('results');
 const clearBtn = document.getElementById('clearSymptoms');
 
 // Add symptom
-if (addBtn) {
-    addBtn.addEventListener('click', addSymptom);
-}
-if (input) {
-    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSymptom(); });
-}
-
 function addSymptom() {
     const symptom = input.value.trim();
     if (symptom && !symptoms.includes(symptom)) {
@@ -191,10 +165,16 @@ function addSymptom() {
         input.value = '';
         updateAnalyzeBtn();
         const newItem = addedList.lastChild;
-        if (newItem) {
-            newItem.style.animation = 'fadeIn 0.5s';
-        }
+        if (newItem) newItem.style.animation = 'fadeIn 0.5s';
     }
+}
+
+// Initialize event listeners
+if (addBtn) {
+    addBtn.addEventListener('click', addSymptom);
+}
+if (input) {
+    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSymptom(); });
 }
 
 // Quick add common symptoms
@@ -216,24 +196,18 @@ function updateAddedList() {
     addedList.innerHTML = symptoms.map((symptom, index) => 
         `<div class="symptom-item">
             <span>${symptom}</span>
-            <button type="button" onclick="window.removeSymptom(${index})"><i class="fas fa-times"></i></button>
+            <button type="button" onclick="removeSymptom(${index})"><i class="fas fa-times"></i></button>
         </div>`).join('');
-    if (clearBtn) {
-        clearBtn.style.display = symptoms.length > 0 ? 'block' : 'none';
-    }
+    if (clearBtn) clearBtn.style.display = symptoms.length > 0 ? 'block' : 'none';
 }
 
-// Make removeSymptom globally accessible
-window.removeSymptom = function(index) {
+function removeSymptom(index) {
     const symptom = symptoms[index];
     symptoms.splice(index, 1);
     updateAddedList();
     updateAnalyzeBtn();
     document.querySelectorAll('.common-symptoms button').forEach(btn => {
-        if (btn.dataset.symptom === symptom) { 
-            btn.disabled = false; 
-            btn.style.opacity = '1'; 
-        }
+        if (btn.dataset.symptom === symptom) { btn.disabled = false; btn.style.opacity = '1'; }
     });
 }
 
@@ -244,16 +218,13 @@ if (clearBtn) {
         updateAddedList();
         updateAnalyzeBtn();
         document.querySelectorAll('.common-symptoms button').forEach(btn => {
-            btn.disabled = false; 
-            btn.style.opacity = '1';
+            btn.disabled = false; btn.style.opacity = '1';
         });
     });
 }
 
 function updateAnalyzeBtn() { 
-    if (analyzeBtn) {
-        analyzeBtn.disabled = symptoms.length === 0; 
-    }
+    if (analyzeBtn) analyzeBtn.disabled = symptoms.length === 0; 
 }
 
 // Analyze button
@@ -261,12 +232,6 @@ if (analyzeBtn) {
     analyzeBtn.addEventListener('click', async () => {
         if (!symptomConditionDf) {
             resultsDiv.innerHTML = `<div class="error"><p>Error: Data not loaded. Please refresh the page.</p></div>`;
-            return;
-        }
-
-        // Check for required libraries
-        if (typeof Plotly === 'undefined') {
-            resultsDiv.innerHTML = `<div class="error"><p>Error: Plotly library not loaded. Please refresh the page.</p></div>`;
             return;
         }
 
@@ -301,10 +266,9 @@ if (analyzeBtn) {
                 top_condition = Object.keys(scores)[0] || "";
             }
             
-            // Store Step 2 results in diagnosticData
-            diagnosticData.step2.topCondition = top_condition || "N/A";
+            // Store Step 2 results for PDF
+            localStorage.setItem("step2TopCondition", top_condition || "N/A");
 
-            // Matched symptoms with HPO
             const step2Matched = [];
             if (top_condition && matched_symptoms[top_condition]) {
                 matched_symptoms[top_condition].forEach(sym => {
@@ -318,13 +282,12 @@ if (analyzeBtn) {
                     });
                 });
             }
-            diagnosticData.step2.matchedSymptoms = step2Matched;
+            localStorage.setItem("step2MatchedSymptoms", JSON.stringify(step2Matched));
 
-            // Other conditions (excluding top)
             const otherConditions = Object.keys(prioritized_conditions)
                 .filter(c => c !== top_condition)
                 .slice(0, 5);
-            diagnosticData.step2.otherConditions = otherConditions;
+            localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
 
             const data = {
                 valid_symptoms,
@@ -344,7 +307,7 @@ if (analyzeBtn) {
                     Object.entries(data.suggested_matches).forEach(([invalid, matches]) => {
                         html += `<p>Suggested matches for '${invalid}':</p>`;
                         matches.forEach(match => {
-                            html += `<p class="suggested-match" data-full="${match.full}" onclick="window.replaceSymptom('${invalid}', '${match.simple}')">• ${match.simple} (${(match.similarity * 100).toFixed(1)}% match)</p>`;
+                            html += `<p class="suggested-match" data-full="${match.full}" onclick="replaceSymptom('${invalid}', '${match.simple}')">• ${match.simple} (${(match.similarity * 100).toFixed(1)}% match)</p>`;
                         });
                     });
                 }
@@ -402,48 +365,50 @@ if (analyzeBtn) {
             }
 
             // Sunburst Chart
-            let labels = ["Potential Conditions"];
-            let parents = [""];
-            let values = [0];
-            let hovertext = ["Root node with all potential conditions"];
-            let colors = ["#f0f0f0"];
-            let totalScore = 0;
+            if (typeof Plotly !== 'undefined') {
+                let labels = ["Potential Conditions"];
+                let parents = [""];
+                let values = [0];
+                let hovertext = ["Root node with all potential conditions"];
+                let colors = ["#f0f0f0"];
+                let totalScore = 0;
 
-            Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
-                labels.push(condition);
-                parents.push("Potential Conditions");
-                values.push(score);
-                hovertext.push(`Condition: ${condition}<br>Score: ${score}`);
-                totalScore += score;
-                colors.push(condition === data.top_condition ? "#28a745" : "#d3d3d3");
-            });
-
-            if (data.top_condition) {
-                const matched = data.matched_symptoms[data.top_condition] || [];
-                matched.forEach(sym => {
-                    labels.push(sym);
-                    parents.push(data.top_condition);
-                    values.push(1);
-                    hovertext.push(`Symptom: ${sym}<br>Contributes to ${data.top_condition}`);
-                    colors.push("#28a745");
+                Object.entries(data.prioritized_conditions || {}).forEach(([condition, score]) => {
+                    labels.push(condition);
+                    parents.push("Potential Conditions");
+                    values.push(score);
+                    hovertext.push(`Condition: ${condition}<br>Score: ${score}`);
+                    totalScore += score;
+                    colors.push(condition === data.top_condition ? "#28a745" : "#d3d3d3");
                 });
+
+                if (data.top_condition) {
+                    const matched = data.matched_symptoms[data.top_condition] || [];
+                    matched.forEach(sym => {
+                        labels.push(sym);
+                        parents.push(data.top_condition);
+                        values.push(1);
+                        hovertext.push(`Symptom: ${sym}<br>Contributes to ${data.top_condition}`);
+                        colors.push("#28a745");
+                    });
+                }
+
+                values[0] = totalScore;
+
+                const chartData = [{
+                    type: "sunburst",
+                    labels: labels,
+                    parents: parents,
+                    values: values,
+                    hovertext: hovertext,
+                    hoverinfo: "text+value+percent parent",
+                    branchvalues: "total",
+                    marker: { line: {width: 2}, colors: colors }
+                }];
+
+                const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
+                Plotly.newPlot('sunburstChart', chartData, layout);
             }
-
-            values[0] = totalScore;
-
-            const chartData = [{
-                type: "sunburst",
-                labels: labels,
-                parents: parents,
-                values: values,
-                hovertext: hovertext,
-                hoverinfo: "text+value+percent parent",
-                branchvalues: "total",
-                marker: { line: {width: 2}, colors: colors }
-            }];
-
-            const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
-            Plotly.newPlot('sunburstChart', chartData, layout);
 
             // HPO extraction & Excel download
             if (data.top_condition && typeof XLSX !== 'undefined') {
@@ -472,16 +437,13 @@ if (analyzeBtn) {
                     `;
                     resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', hpoHtml);
 
-                    const downloadHpoBtn = document.getElementById('downloadHpoBtn');
-                    if (downloadHpoBtn) {
-                        downloadHpoBtn.addEventListener('click', () => {
-                            const wsData = [["Symptom", "HPO_ID"], ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])];
-                            const wb = XLSX.utils.book_new();
-                            const ws = XLSX.utils.aoa_to_sheet(wsData);
-                            XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
-                            XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
-                        });
-                    }
+                    document.getElementById('downloadHpoBtn').addEventListener('click', () => {
+                        const wsData = [["Symptom", "HPO_ID"], ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])];
+                        const wb = XLSX.utils.book_new();
+                        const ws = XLSX.utils.aoa_to_sheet(wsData);
+                        XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
+                        XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
+                    });
                 }
             }
 
@@ -494,8 +456,8 @@ if (analyzeBtn) {
     });
 }
 
-// Make replaceSymptom globally accessible
-window.replaceSymptom = function(invalid, simple) {
+// Replace invalid symptom
+function replaceSymptom(invalid, simple) {
     const index = symptoms.indexOf(invalid);
     if (index > -1) {
         symptoms[index] = simple;
@@ -506,10 +468,10 @@ window.replaceSymptom = function(invalid, simple) {
     }
 }
 
-// Generate PDF function
-window.generateFinalNMPhenoscorePDF = async function() {
+// PDF Generation Function
+async function generateFinalNMPhenoscorePDF() {
     if (!window.jspdf) {
-        alert("jsPDF not loaded");
+        alert("jsPDF library not loaded. Please ensure it's included in your HTML.");
         return;
     }
 
@@ -518,18 +480,18 @@ window.generateFinalNMPhenoscorePDF = async function() {
 
     let y = 15;
 
-    // Retrieve patient data from diagnosticData
-    const patientName = diagnosticData.patient.name || "N/A";
-    const patientAge = diagnosticData.patient.age || "N/A";
-    const patientContact = diagnosticData.patient.contact || "N/A";
-    const score = diagnosticData.step1.score || "0%";
-    const status = diagnosticData.step1.status || "N/A";
-    const step1Symptoms = diagnosticData.step1.symptoms || [];
-    const topCondition = diagnosticData.step2.topCondition || "N/A";
-    const matchedSymptoms = diagnosticData.step2.matchedSymptoms || [];
-    const otherConditions = diagnosticData.step2.otherConditions || [];
+    // Retrieve patient data
+    const patientName = localStorage.getItem("patientName") || "N/A";
+    const patientAge = localStorage.getItem("patientAge") || "N/A";
+    const patientContact = localStorage.getItem("patientContact") || "N/A";
+    const score = localStorage.getItem("step1Score") || "0%";
+    const status = localStorage.getItem("step1Status") || "N/A";
+    const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
+    const topCondition = localStorage.getItem("step2TopCondition") || "N/A";
+    const matchedSymptoms = JSON.parse(localStorage.getItem("step2MatchedSymptoms") || "[]");
+    const otherConditions = JSON.parse(localStorage.getItem("step2OtherConditions") || "[]");
 
-    // ===== HEADER SECTION =====
+    // HEADER SECTION
     pdf.setFontSize(20);
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(0, 0, 0);
@@ -542,13 +504,12 @@ window.generateFinalNMPhenoscorePDF = async function() {
     pdf.text("Neuromuscular Genetic Disorder Assessment", 105, y, { align: "center" });
     y += 12;
     
-    // Horizontal line
     pdf.setDrawColor(43, 140, 238);
     pdf.setLineWidth(0.5);
     pdf.line(20, y, 190, y);
     y += 10;
 
-    // ===== PATIENT INFORMATION BOX =====
+    // PATIENT INFORMATION BOX
     pdf.setFillColor(245, 247, 250);
     pdf.rect(20, y, 170, 32, 'F');
     
@@ -583,7 +544,7 @@ window.generateFinalNMPhenoscorePDF = async function() {
     pdf.text(new Date().toLocaleDateString('en-GB'), 155, y);
     y += 15;
 
-    // ===== SECTION 1: INITIAL SCREENING =====
+    // SECTION 1: INITIAL SCREENING
     pdf.setFontSize(13);
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(43, 140, 238);
@@ -593,7 +554,6 @@ window.generateFinalNMPhenoscorePDF = async function() {
     pdf.setFontSize(10);
     pdf.setTextColor(0, 0, 0);
     
-    // Assessment boxes (side by side)
     pdf.setFillColor(245, 245, 245);
     pdf.rect(25, y, 80, 18, 'F');
     pdf.setFont(undefined, 'bold');
@@ -616,7 +576,7 @@ window.generateFinalNMPhenoscorePDF = async function() {
     pdf.setFontSize(10);
     y += 25;
 
-    // Clinical presentation (two columns)
+    // Clinical presentation
     if (step1Symptoms.length > 0) {
         pdf.setFont(undefined, 'bold');
         pdf.text(`Clinical Presentation (${step1Symptoms.length} symptoms identified):`, 25, y);
@@ -647,7 +607,7 @@ window.generateFinalNMPhenoscorePDF = async function() {
         y = Math.max(leftY, rightY) + 5;
     }
 
-    // ===== SECTION 2: DIFFERENTIAL DIAGNOSIS =====
+    // SECTION 2: DIFFERENTIAL DIAGNOSIS
     if (y > 250) { pdf.addPage(); y = 20; }
     
     pdf.setFontSize(13);
@@ -656,7 +616,6 @@ window.generateFinalNMPhenoscorePDF = async function() {
     pdf.text("2. CONDITION SPECIFIC DIAGNOSIS", 20, y);
     y += 8;
 
-    // Primary diagnosis box
     pdf.setFontSize(10);
     pdf.setTextColor(0, 0, 0);
     pdf.setFillColor(240, 253, 244);
@@ -673,7 +632,6 @@ window.generateFinalNMPhenoscorePDF = async function() {
     pdf.setTextColor(0, 0, 0);
     y += 28;
 
-    // Matched symptoms with HPO
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'bold');
     pdf.text("Matched Clinical Features:", 25, y);
@@ -698,93 +656,117 @@ window.generateFinalNMPhenoscorePDF = async function() {
         y += 5;
     }
     y += 8;
-  
-  // ===== SECTION 3: OTHER CONDITIONS =====
-  if (y > 245) { pdf.addPage(); y = 20; }
-  
-  pdf.setFontSize(13);
-  pdf.setFont(undefined, 'bold');
-  pdf.setTextColor(43, 140, 238);
-  pdf.text("3. OTHER POSSIBLE DIAGNOSTIC CONSIDERATIONS", 20, y);
-  y += 8;
-
-  pdf.setFontSize(10);
-  pdf.setTextColor(0, 0, 0);
-  
-  if (otherConditions.length > 0) {
-    pdf.setFont(undefined, 'normal');
-    pdf.setFontSize(9);
     
-    otherConditions.forEach((cond, idx) => {
-      if (y > 265) { pdf.addPage(); y = 20; }
-      pdf.setFont(undefined, 'bold');
-      pdf.text(`${idx + 1}. ${cond}`, 25, y);
-      pdf.setFont(undefined, 'normal');
-      y += 6;
-    });
-  } else {
-    pdf.setFont(undefined, 'normal');
-    pdf.text("No alternative diagnoses identified with significant correlation", 25, y);
-    y += 6;
-  }
-  y += 8;
+    // SECTION 3: OTHER CONDITIONS
+    if (y > 245) { pdf.addPage(); y = 20; }
+    
+    pdf.setFontSize(13);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(43, 140, 238);
+    pdf.text("3. OTHER POSSIBLE DIAGNOSTIC CONSIDERATIONS", 20, y);
+    y += 8;
 
-  // ===== DISCLAIMER =====
-  if (y > 250) { pdf.addPage(); y = 20; }
-  
-  pdf.setFillColor(255, 250, 240);
-  pdf.rect(20, y, 170, 30, 'F');
-  
-  pdf.setFontSize(10);
-  pdf.setFont(undefined, 'bold');
-  pdf.text("IMPORTANT CLINICAL DISCLAIMER", 25, y + 7);
-  
-  pdf.setFont(undefined, 'normal');
-  pdf.setFontSize(8);
-  pdf.setTextColor(80, 80, 80);
-  
-  const disclaimer = "This report provides a computational analysis based on phenotypic presentation and should not replace comprehensive clinical evaluation. Final diagnosis must be confirmed through appropriate clinical, laboratory, and genetic testing. This tool is designed to assist in prioritizing differential diagnoses and should be interpreted in conjunction with complete medical history, physical examination, and additional diagnostic investigations.";
-  
-  const disclaimerLines = pdf.splitTextToSize(disclaimer, 160);
-  pdf.text(disclaimerLines, 25, y + 14);
-  y += 35;
-  
-  // ===== FOOTER =====
-  pdf.setDrawColor(200, 200, 200);
-  pdf.line(20, y, 190, y);
-  y += 5;
-  
-  pdf.setFontSize(8);
-  pdf.setTextColor(120, 120, 120);
-  pdf.text("NMPhenoscore Clinical Decision Support System", 105, y, { align: "center" });
-  y += 4;
-  pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
-  
-  // ===== APPEND UPLOADED IMAGES =====
-  if (uploadedImages.length > 0) {
-    pdf.addPage();
-    y = 20;
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, "bold");
+    pdf.setFontSize(10);
     pdf.setTextColor(0, 0, 0);
-    pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
-    y += 10;
     
-    for (let i = 0; i < uploadedImages.length; i++) {
-      if (y > 240) {
+    if (otherConditions.length > 0) {
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(9);
+        
+        otherConditions.forEach((cond, idx) => {
+            if (y > 265) { pdf.addPage(); y = 20; }
+            pdf.setFont(undefined, 'bold');
+            pdf.text(`${idx + 1}. ${cond}`, 25, y);
+            pdf.setFont(undefined, 'normal');
+            y += 6;
+        });
+    } else {
+        pdf.setFont(undefined, 'normal');
+        pdf.text("No alternative diagnoses identified with significant correlation", 25, y);
+        y += 6;
+    }
+    y += 8;
+
+    // DISCLAIMER
+    if (y > 250) { pdf.addPage(); y = 20; }
+    
+    pdf.setFillColor(255, 250, 240);
+    pdf.rect(20, y, 170, 30, 'F');
+    
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'bold');
+    pdf.text("IMPORTANT CLINICAL DISCLAIMER", 25, y + 7);
+    
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(80, 80, 80);
+    
+    const disclaimer = "This report provides a computational analysis based on phenotypic presentation and should not replace comprehensive clinical evaluation. Final diagnosis must be confirmed through appropriate clinical, laboratory, and genetic testing. This tool is designed to assist in prioritizing differential diagnoses and should be interpreted in conjunction with complete medical history, physical examination, and additional diagnostic investigations.";
+    
+    const disclaimerLines = pdf.splitTextToSize(disclaimer, 160);
+    pdf.text(disclaimerLines, 25, y + 14);
+    y += 35;
+    
+    // FOOTER
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(20, y, 190, y);
+    y += 5;
+    
+    pdf.setFontSize(8);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text("NMPhenoscore Clinical Decision Support System", 105, y, { align: "center" });
+    y += 4;
+    pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
+    
+    // APPEND UPLOADED IMAGES
+    if (uploadedImages.length > 0) {
         pdf.addPage();
         y = 20;
-      }
-      const imgData = uploadedImages[i];
-      const imgType = imgData.startsWith("data:image/png") ? "PNG" : "JPEG";
-      const imgProps = pdf.getImageProperties(imgData);
-      const pageWidth = 170;
-      const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
-      pdf.addImage(imgData, imgType, 20, y, pageWidth, imgHeight, undefined, "FAST");
-      y += imgHeight + 10;
+        pdf.setFontSize(14);
+        pdf.setFont(undefined, "bold");
+        pdf.setTextColor(0, 0, 0);
+        pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
+        y += 10;
+        
+        for (let i = 0; i < uploadedImages.length; i++) {
+            if (y > 240) {
+                pdf.addPage();
+                y = 20;
+            }
+            const imgData = uploadedImages[i];
+            const imgType = imgData.startsWith("data:image/png") ? "PNG" : "JPEG";
+            const imgProps = pdf.getImageProperties(imgData);
+            const pageWidth = 170;
+            const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+            pdf.addImage(imgData, imgType, 20, y, pageWidth, imgHeight, undefined, "FAST");
+            y += imgHeight + 10;
+        }
     }
-  }
-  // Save file
-  const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
-  pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
+    
+    // Save file
+    const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
+    pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
 }
+
+// Make functions globally accessible
+window.removeSymptom = removeSymptom;
+window.replaceSymptom = replaceSymptom;
+window.generateFinalNMPhenoscorePDF = generateFinalNMPhenoscorePDF;
+
+// Initialize on page load
+(async () => {
+    const loaded = await loadData();
+    if (loaded) {
+        await fetchAllSymptoms();
+        
+        // Setup PDF download button listener
+        const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', generateFinalNMPhenoscorePDF);
+        }
+    } else {
+        if (resultsDiv) {
+            resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
+        }
+    }
+})();
