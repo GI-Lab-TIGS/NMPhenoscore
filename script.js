@@ -709,6 +709,32 @@ async function generateFinalNMPhenoscorePDF() {
   y += 4;
   pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
 
+// ===== APPEND UPLOADED IMAGES =====
+  if (uploadedImages.length > 0) {
+    pdf.addPage();
+    y = 20;
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, "bold");
+    pdf.setTextColor(0, 0, 0);
+    pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
+    y += 10;
+    
+    for (let i = 0; i < uploadedImages.length; i++) {
+      if (y > 240) {
+        pdf.addPage();
+        y = 20;
+      }
+      const imgData = uploadedImages[i];
+      const imgType = imgData.startsWith("data:image/png") ? "PNG" : "JPEG";
+      const imgProps = pdf.getImageProperties(imgData);
+      const pageWidth = 170;
+      const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+      pdf.addImage(imgData, imgType, 20, y, pageWidth, imgHeight, undefined, "FAST");
+      y += imgHeight + 10;
+    }
+  }
+
+
   // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
