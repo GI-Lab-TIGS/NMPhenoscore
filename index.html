@@ -470,6 +470,13 @@
             text-align: center;
             border-top: 1px solid #e5e7eb;
         }
+        .patient-center {
+    display: flex;
+    justify-content: center;   /* horizontal center */
+    align-items: center;       /* vertical center */
+    min-height: calc(100vh - 220px); /* below banner */
+}
+
     </style>
 </head>
 <body>
@@ -478,12 +485,11 @@
         <p>Initial screening for Neuromuscular genetic disorder(NMGD)</p>
     </div>
 
-    <div id="patient-profile" class="main-container">
+    <div id="patient-profile" class="main-container patient-center">
         <div style="
             max-width: 520px;
-            width: 100%;
+            width: 100%
             margin: 0 auto;
-            margin-right: 100px;
             background: #ffffff;
             padding: 42px;
             border-radius: 18px;
@@ -759,6 +765,7 @@
     </script>
 </body>
 </html>
+
 
 
 
