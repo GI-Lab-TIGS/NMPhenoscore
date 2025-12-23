@@ -754,13 +754,7 @@
             document.getElementById("pAge").textContent = age;
             document.getElementById("pContact").textContent = contact;
         }
-
-        // Auto-resume if already filled
-        document.addEventListener("DOMContentLoaded", () => {
-            if (localStorage.getItem("patientName")) {
-                showTool();
-            }
-        });
     </script>
 </body>
 </html>
+
