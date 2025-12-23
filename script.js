@@ -7,7 +7,7 @@ const commonSymptoms = [
 let symptomConditionDf = null;
 let allSymptoms = [];
 let symptomMapping = {};
-let conditionUrls = {};  
+let conditionUrls = {};
 
 // Function to compute LCS length
 function lcsLength(s1, s2) {
@@ -213,10 +213,417 @@ clearBtn.addEventListener('click', () => {
 
 function updateAnalyzeBtn() { analyzeBtn.disabled = symptoms.length === 0; }
 
+// Comprehensive PDF Generation for Step 1 + Step 2
+async function generateComprehensivePDF() {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    let yPos = margin;
+
+    // ========== HEADER ==========
+    pdf.setFillColor(59, 130, 246);
+    pdf.rect(0, 0, pageWidth, 40, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('NMphenoscore Report', pageWidth / 2, 20, { align: 'center' });
+    pdf.setFontSize(12);
+    pdf.text('Complete NMGD Assessment', pageWidth / 2, 30, { align: 'center' });
+
+    yPos = 50;
+    pdf.setTextColor(0, 0, 0);
+
+    // ========== PATIENT INFORMATION ==========
+    const patientName = localStorage.getItem('patientName') || 'N/A';
+    const patientAge = localStorage.getItem('patientAge') || 'N/A';
+    const patientContact = localStorage.getItem('patientContact') || 'N/A';
+    const reportDate = new Date().toLocaleDateString();
+
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Report Generated: ${reportDate}`, pageWidth - margin, yPos, { align: 'right' });
+    yPos += 10;
+
+    // ========== STEP 2: CONDITION ANALYSIS ==========
+    if (yPos > pageHeight - 60) {
+        pdf.addPage();
+        yPos = margin;
+    }
+
+    pdf.setFillColor(30, 58, 138);
+    pdf.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('STEP 2: Specific Condition Analysis', margin + 3, yPos + 7);
+    yPos += 15;
+    pdf.setTextColor(0, 0, 0);
+
+    // Top Condition
+    const topCondition = localStorage.getItem('step2TopCondition') || 'No significant condition identified';
+    
+    pdf.setFillColor(16, 185, 129);
+    pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 15, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`TOP RECOMMENDATION: ${topCondition}`, pageWidth / 2, yPos + 10, { align: 'center' });
+    yPos += 20;
+
+    pdf.setTextColor(0, 0, 0);
+
+    // Valid Symptoms from Step 2
+    const validSymptoms = JSON.parse(localStorage.getItem('step2ValidSymptoms') || '[]');
+    if (validSymptoms.length > 0) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`Analyzed Symptoms (${validSymptoms.length})`, margin, yPos);
+        yPos += 7;
+
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+        validSymptoms.forEach((symptom, index) => {
+            if (yPos > pageHeight - 30) {
+                pdf.addPage();
+                yPos = margin;
+            }
+            const lines = pdf.splitTextToSize(`• ${symptom}`, pageWidth - 2 * margin - 10);
+            pdf.text(lines, margin + 5, yPos);
+            yPos += lines.length * 4.5;
+        });
+        yPos += 5;
+    }
+
+    // Prioritized Conditions
+    const prioritized = JSON.parse(localStorage.getItem('step2PrioritizedConditions') || '{}');
+    const matched = JSON.parse(localStorage.getItem('step2MatchedSymptoms') || '{}');
+
+    if (Object.keys(prioritized).length > 0) {
+        if (yPos > pageHeight - 80) {
+            pdf.addPage();
+            yPos = margin;
+        }
+
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Prioritized Conditions', margin, yPos);
+        yPos += 10;
+
+        Object.entries(prioritized).slice(0, 6).forEach(([condition, score], index) => {
+            if (yPos > pageHeight - 50) {
+                pdf.addPage();
+                yPos = margin;
+            }
+
+            // Condition box
+            const boxHeight = 30;
+            pdf.setDrawColor(200, 200, 200);
+            pdf.setLineWidth(0.3);
+            pdf.rect(margin, yPos, pageWidth - 2 * margin, boxHeight);
+
+            // Highlight top condition
+            if (index === 0) {
+                pdf.setFillColor(240, 253, 244);
+                pdf.rect(margin, yPos, pageWidth - 2 * margin, boxHeight, 'F');
+                pdf.rect(margin, yPos, pageWidth - 2 * margin, boxHeight);
+            }
+
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(`${index + 1}. ${condition}`, margin + 3, yPos + 6);
+
+            pdf.setFontSize(9);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Score: ${score} matching symptom(s)`, margin + 3, yPos + 12);
+
+            const matchedSymptoms = matched[condition] || [];
+            if (matchedSymptoms.length > 0) {
+                const matchText = `Matched: ${matchedSymptoms.join(', ')}`;
+                const lines = pdf.splitTextToSize(matchText, pageWidth - 2 * margin - 8);
+                pdf.text(lines, margin + 3, yPos + 17);
+            }
+
+            yPos += boxHeight + 4;
+        });
+    }
+
+    // HPO Terms
+    const hpoTerms = JSON.parse(localStorage.getItem('step2HpoTerms') || '[]');
+    if (hpoTerms.length > 0) {
+        if (yPos > pageHeight - 60) {
+            pdf.addPage();
+            yPos = margin;
+        }
+
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`HPO Terms for ${topCondition}`, margin, yPos);
+        yPos += 10;
+
+        // Table header
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F');
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Symptom', margin + 2, yPos + 5);
+        pdf.text('HPO ID', pageWidth - margin - 30, yPos + 5);
+        yPos += 10;
+
+        // Table rows
+        pdf.setFont('helvetica', 'normal');
+        hpoTerms.forEach((row, index) => {
+            if (yPos > pageHeight - 25) {
+                pdf.addPage();
+                yPos = margin;
+            }
+
+            if (index % 2 === 0) {
+                pdf.setFillColor(250, 250, 250);
+                pdf.rect(margin, yPos - 4, pageWidth - 2 * margin, 7, 'F');
+            }
+
+            const symptomLines = pdf.splitTextToSize(row.Symptom, pageWidth - 2 * margin - 35);
+            pdf.text(symptomLines, margin + 2, yPos);
+            pdf.text(row.HPO_ID, pageWidth - margin - 30, yPos);
+            yPos += Math.max(symptomLines.length * 4.5, 7);
+        });
+    }
+
+    // Disclaimer
+    yPos = pageHeight - 20;
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'italic');
+    pdf.setTextColor(100, 100, 100);
+    const disclaimer = 'Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare professionals for proper diagnosis and treatment.';
+    const disclaimerLines = pdf.splitTextToSize(disclaimer, pageWidth - 2 * margin);
+    pdf.text(disclaimerLines, pageWidth / 2, yPos, { align: 'center' });
+
+    // Save PDF
+    pdf.save(`NMphenoscore_Complete_${patientName.replace(/\s+/g, '_')}_${reportDate}.pdf`);
+}
+
+    pdf.setFillColor(240, 240, 240);
+    pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 25, 2, 2, 'F');
+    
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Patient Information', margin + 5, yPos + 7);
+    yPos += 12;
+
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Name: ${patientName}`, margin + 5, yPos);
+    yPos += 6;
+    pdf.text(`Age: ${patientAge} years`, margin + 5, yPos);
+    yPos += 6;
+    pdf.text(`Contact: ${patientContact}`, margin + 5, yPos);
+    yPos += 15;
+
+    // ========== STEP 1: INITIAL SCREENING RESULTS ==========
+    pdf.setFillColor(30, 58, 138);
+    pdf.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('STEP 1: Initial NMGD Screening', margin + 3, yPos + 7);
+    yPos += 15;
+    pdf.setTextColor(0, 0, 0);
+
+    const step1Score = localStorage.getItem('step1Score') || '0.0%';
+    const step1Status = localStorage.getItem('step1Status') || 'Likely NMGD Negative';
+    const totalSymptoms = localStorage.getItem('step1TotalSymptoms') || '24';
+    const selectedCount = localStorage.getItem('step1SelectedCount') || '0';
+
+    // Score Box
+    pdf.setDrawColor(59, 130, 246);
+    pdf.setLineWidth(0.5);
+    pdf.rect(margin, yPos, pageWidth - 2 * margin, 28);
+
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Assessment Score: ${step1Score}`, pageWidth / 2, yPos + 10, { align: 'center' });
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Symptoms Selected: ${selectedCount} out of ${totalSymptoms}`, pageWidth / 2, yPos + 18, { align: 'center' });
+
+    yPos += 33;
+
+    // Status
+    const isPositive = step1Status.includes('Positive');
+    pdf.setFillColor(isPositive ? 16 : 245, isPositive ? 185 : 158, isPositive ? 129 : 11);
+    pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(step1Status, pageWidth / 2, yPos + 8, { align: 'center' });
+
+    yPos += 17;
+    pdf.setTextColor(0, 0, 0);
+
+    // Selected Symptoms from Step 1
+    const selectedSymptoms = JSON.parse(localStorage.getItem('step1Symptoms') || '[]');
+    if (selectedSymptoms.length > 0) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Selected Symptoms:', margin, yPos);
+        yPos += 7;
+
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+
+        selectedSymptoms.forEach((symptom, index) => {
+            if (yPos > pageHeight - 30) {
+                pdf.addPage();
+                yPos = margin;
+            }
+            const lines = pdf.splitTextToSize(`${index + 1}. ${symptom}`, pageWidth - 2 * margin - 10);
+            pdf.text(lines, margin + 5, yPos);
+            yPos += lines.length * 4.5;
+        });
+    }
+
+    yPos += 10;
+
+    // Top Condition
+    const topCondition = localStorage.getItem('step2TopCondition') || 'No significant condition identified';
+    
+    pdf.setFillColor(16, 185, 129);
+    pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 15, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`TOP RECOMMENDATION: ${topCondition}`, pageWidth / 2, yPos + 10, { align: 'center' });
+    yPos += 20;
+
+    pdf.setTextColor(0, 0, 0);
+
+    // Valid Symptoms
+    const validSymptoms = JSON.parse(localStorage.getItem('step2ValidSymptoms') || '[]');
+    if (validSymptoms.length > 0) {
+        pdf.setFontSize(13);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`Analyzed Symptoms (${validSymptoms.length})`, margin, yPos);
+        yPos += 8;
+
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        validSymptoms.forEach((symptom, index) => {
+            if (yPos > pageHeight - 30) {
+                pdf.addPage();
+                yPos = margin;
+            }
+            const lines = pdf.splitTextToSize(`• ${symptom}`, pageWidth - 2 * margin - 10);
+            pdf.text(lines, margin + 5, yPos);
+            yPos += lines.length * 5;
+        });
+        yPos += 5;
+    }
+
+    // Prioritized Conditions
+    const prioritized = JSON.parse(localStorage.getItem('step2PrioritizedConditions') || '{}');
+    const matched = JSON.parse(localStorage.getItem('step2MatchedSymptoms') || '{}');
+
+    if (Object.keys(prioritized).length > 0) {
+        if (yPos > pageHeight - 80) {
+            pdf.addPage();
+            yPos = margin;
+        }
+
+        pdf.setFontSize(13);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Prioritized Conditions', margin, yPos);
+        yPos += 10;
+
+        Object.entries(prioritized).slice(0, 5).forEach(([condition, score], index) => {
+            if (yPos > pageHeight - 50) {
+                pdf.addPage();
+                yPos = margin;
+            }
+
+            // Condition box
+            const boxHeight = 35;
+            pdf.setDrawColor(200, 200, 200);
+            pdf.setLineWidth(0.3);
+            pdf.rect(margin, yPos, pageWidth - 2 * margin, boxHeight);
+
+            pdf.setFontSize(11);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(`${index + 1}. ${condition}`, margin + 3, yPos + 6);
+
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Score: ${score} matching symptom(s)`, margin + 3, yPos + 12);
+
+            const matchedSymptoms = matched[condition] || [];
+            if (matchedSymptoms.length > 0) {
+                const matchText = `Matched: ${matchedSymptoms.join(', ')}`;
+                const lines = pdf.splitTextToSize(matchText, pageWidth - 2 * margin - 8);
+                pdf.text(lines, margin + 3, yPos + 18);
+            }
+
+            yPos += boxHeight + 5;
+        });
+    }
+
+    // HPO Terms
+    const hpoTerms = JSON.parse(localStorage.getItem('step2HpoTerms') || '[]');
+    if (hpoTerms.length > 0) {
+        if (yPos > pageHeight - 60) {
+            pdf.addPage();
+            yPos = margin;
+        }
+
+        pdf.setFontSize(13);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('HPO Terms', margin, yPos);
+        yPos += 10;
+
+        // Table header
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F');
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Symptom', margin + 2, yPos + 5);
+        pdf.text('HPO ID', pageWidth - margin - 30, yPos + 5);
+        yPos += 10;
+
+        // Table rows
+        pdf.setFont('helvetica', 'normal');
+        hpoTerms.forEach((row, index) => {
+            if (yPos > pageHeight - 25) {
+                pdf.addPage();
+                yPos = margin;
+            }
+
+            if (index % 2 === 0) {
+                pdf.setFillColor(250, 250, 250);
+                pdf.rect(margin, yPos - 4, pageWidth - 2 * margin, 7, 'F');
+            }
+
+            const symptomLines = pdf.splitTextToSize(row.Symptom, pageWidth - 2 * margin - 35);
+            pdf.text(symptomLines, margin + 2, yPos);
+            pdf.text(row.HPO_ID, pageWidth - margin - 30, yPos);
+            yPos += Math.max(symptomLines.length * 5, 7);
+        });
+    }
+
+    // Disclaimer
+    yPos = pageHeight - 20;
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'italic');
+    pdf.setTextColor(100, 100, 100);
+    const disclaimer = 'Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.';
+    const disclaimerLines = pdf.splitTextToSize(disclaimer, pageWidth - 2 * margin);
+    pdf.text(disclaimerLines, pageWidth / 2, yPos, { align: 'center' });
+
+    // Save PDF
+    pdf.save(`NMphenoscore_Step2_${patientName.replace(/\s+/g, '_')}_${reportDate}.pdf`);
+}
+
 // Analyze button
 analyzeBtn.addEventListener('click', async () => {
-
-
     if (!symptomConditionDf) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: Data not loaded. Please refresh the page.</p></div>`;
         return;
@@ -261,29 +668,13 @@ analyzeBtn.addEventListener('click', async () => {
             matched_symptoms,
             top_condition
         };
-        // ===== SAVE STEP 2 RESULTS FOR REPORT =====
-localStorage.setItem("step2TopCondition", data.top_condition || "");
 
-localStorage.setItem(
-    "step2PrioritizedConditions",
-    JSON.stringify(data.prioritized_conditions || {})
-);
-
-localStorage.setItem(
-    "step2MatchedSymptoms",
-    JSON.stringify(data.matched_symptoms || {})
-);
-
-localStorage.setItem(
-    "step2ValidSymptoms",
-    JSON.stringify(data.valid_symptoms || [])
-);
-
-localStorage.setItem(
-    "step2InvalidSymptoms",
-    JSON.stringify(data.invalid_symptoms || [])
-);
-
+        // Save Step 2 results
+        localStorage.setItem("step2TopCondition", data.top_condition || "");
+        localStorage.setItem("step2PrioritizedConditions", JSON.stringify(data.prioritized_conditions || {}));
+        localStorage.setItem("step2MatchedSymptoms", JSON.stringify(data.matched_symptoms || {}));
+        localStorage.setItem("step2ValidSymptoms", JSON.stringify(data.valid_symptoms || []));
+        localStorage.setItem("step2InvalidSymptoms", JSON.stringify(data.invalid_symptoms || []));
 
         let html = `<h3>Prioritized conditions (based on ${data.valid_symptoms?.length || 0} symptoms):</h3>`;
         
@@ -344,7 +735,13 @@ localStorage.setItem(
             html += '<p>No conditions match the provided symptoms.</p>';
         }
 
+        // Add PDF download button
+        html += '<div style="text-align: center; margin-top: 30px;"><button id="downloadCompletePDF" class="pdf-button" style="padding: 14px 40px; background-color: #dc2626; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3); transition: all 0.3s;">📄 Download Complete Report (Step 1 + Step 2)</button></div>';
+
         resultsDiv.innerHTML = `<div class="results-content">${html}</div>`;
+
+        // Attach PDF download event
+        document.getElementById('downloadCompletePDF').addEventListener('click', generateComprehensivePDF);
 
         // Sunburst Chart
         let labels = ["Potential Conditions"];
@@ -390,7 +787,7 @@ localStorage.setItem(
         const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
         Plotly.newPlot('sunburstChart', chartData, layout);
 
-        // --- NEW: HPO extraction & Excel download ---
+        // HPO extraction & Excel download
         if (data.top_condition) {
             const topCondition = data.top_condition;
             const matchedSymptoms = data.matched_symptoms[topCondition] || [];
