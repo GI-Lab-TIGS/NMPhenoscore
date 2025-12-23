@@ -98,9 +98,7 @@ function prioritizeConditions(symptomsList, symptomConditionDf, symptomMapping) 
                 matchedFull.push(simple);
             }
         }
-        if (conditionScores[condition] > 0) {
-  matchedSymptomsDict[condition] = matchedFull;
-}
+        matchedSymptomsDict[condition] = matchedFull;
     }
 
     return { scores: prioritizedConditions, matched: matchedSymptomsDict };
@@ -234,7 +232,7 @@ analyzeBtn.addEventListener('click', async () => {
         for (const symptom of symptoms) {
             const originalSimple = extractSymptomName(symptom);
             const lowerSimple = originalSimple.toLowerCase();
-            if (symptomMapping.hasOwnProperty(lowerSimple)) valid_symptoms.push(symptomMapping[lowerSimple]);
+            if (symptomMapping.hasOwnProperty(lowerSimple)) valid_symptoms.push(originalSimple);
             else {
                 invalid_symptoms.push(symptom);
                 const closeMatches = findClosestMatches(symptom, allSymptoms);
@@ -372,17 +370,14 @@ analyzeBtn.addEventListener('click', async () => {
             const topCondition = data.top_condition;
             const matchedSymptoms = data.matched_symptoms[topCondition] || [];
 
-           const hpoTerms = symptomConditionDf.symptoms
-           .filter(sym => matchedSymptoms.includes(extractSymptomName(sym)))
-  .map(sym => {
-    const match = sym.match(/\(HP:\d+\)/);
-    return {
-      Symptom: extractSymptomName(sym),
-      HPO_ID: match ? match[0].replace(/[()]/g, '') : ''
-    };
-  })
-  .filter(row => row.HPO_ID);
-
+            const hpoTerms = symptomConditionDf.symptoms
+                .filter(sym => matchedSymptoms.some(ms => sym.toLowerCase().includes(ms.toLowerCase())))
+                .map(sym => {
+                    const match = sym.match(/\(HP:\d+\)/);
+                    const hpo = match ? match[0].replace(/[()]/g, '') : '';
+                    return { Symptom: sym.split('(')[0].trim(), HPO_ID: hpo };
+                })
+                .filter(row => row.HPO_ID !== '');
 
             if (hpoTerms.length > 0) {
                 const hpoHtml = `
@@ -407,29 +402,7 @@ analyzeBtn.addEventListener('click', async () => {
             }
         }
 
-    } 
-    // ===== SAVE STEP 2 RESULTS FOR PDF =====
-localStorage.setItem("step2TopCondition", data.top_condition);
-
-localStorage.setItem(
-  "step2MatchedSymptoms",
-  JSON.stringify(
-    (data.matched_symptoms[data.top_condition] || []).map(sym => {
-      const full = symptomConditionDf.symptoms.find(
-        s => extractSymptomName(s) === sym
-      );
-      const hpo = full?.match(/\(HP:\d+\)/)?.[0]?.replace(/[()]/g, "") || "";
-      return { symptom: sym, hpo };
-    })
-  )
-);
-
-localStorage.setItem(
-  "step2OtherConditions",
-  JSON.stringify(Object.keys(data.prioritized_conditions).slice(1, 5))
-);
-
-    catch (error) {
+    } catch (error) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: ${error.message}. Ensure the data files are available.</p></div>`;
     }
 
@@ -454,8 +427,8 @@ function replaceSymptom(invalid, simple) {
     else resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
 })();
 
+// FINAL PDF GENERATION (STEP 1 + STEP 2)
 
- //FINAL PDF GENERATION (STEP 1 + STEP 2)
 
 async function generateFinalNMPhenoscorePDF() {
   if (!window.jspdf) {
@@ -468,7 +441,8 @@ async function generateFinalNMPhenoscorePDF() {
 
   let y = 15;
 
-    // PAGE 1 – STEP 1 RESULT
+
+//     PAGE 1 – STEP 1 RESULT
 
   pdf.setFontSize(16);
   pdf.text("NMPhenoscore – Patient Report", 105, y, { align: "center" });
@@ -524,7 +498,7 @@ async function generateFinalNMPhenoscorePDF() {
     y += 5;
   });
 
-     //PAGE 2 – STEP 2 RESULT
+  //     PAGE 2 – STEP 2 RESULT
 
 
   pdf.addPage();
@@ -582,8 +556,8 @@ async function generateFinalNMPhenoscorePDF() {
     y += 5;
   });
 
+//     SAVE FILE
 
-     //SAVE FILE
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
-  pdf.save(`NMPhenoscore_Report_${safeName}.pdf`);
+  pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
 }
