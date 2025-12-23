@@ -10,6 +10,41 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .download-pdf-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #2b8cee 0%, #1a5fb4 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(43, 140, 238, 0.3);
+            transition: all 0.3s ease;
+            text-align: center;
+            width: fit-content;
+        }
+
+        .download-pdf-btn:hover {
+            background: linear-gradient(135deg, #1a5fb4 0%, #15539e 100%);
+            box-shadow: 0 6px 20px rgba(43, 140, 238, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .download-pdf-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(43, 140, 238, 0.3);
+        }
+
+        .download-pdf-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+    </style>
 </head>
 <body>
     <div class="app">
@@ -74,14 +109,9 @@
                     <p>No analysis performed yet</p>
                     <p>Add symptoms and click "Analyze" to get started</p>
                 </div>
-                <button
-  id="downloadPdfBtn"
-  onclick="generateFinalNMPhenoscorePDF()"
-  class="download-btn"
-  style="display:none;"
->
-  Download Full Report (PDF)
-</button>
+                <button id="downloadPdfBtn" onclick="generateFinalNMPhenoscorePDF()" class="download-pdf-btn" style="display: none;">
+                    📄 Download Full Report (PDF)
+                </button>
 
             </div>
         </div>
