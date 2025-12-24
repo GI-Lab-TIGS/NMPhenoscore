@@ -164,8 +164,11 @@ const previewContainer = document.getElementById("uploadPreview");
 if (fileInput) {
   fileInput.addEventListener("change", async (e) => {
     const files = Array.from(e.target.files);
+    
+    console.log("Files selected:", files.length);
 
     for (const file of files) {
+      console.log("Processing file:", file.name, file.type);
       if (file.type.startsWith("image/")) {
         handleImageFile(file);
       } else if (file.type === "application/pdf") {
@@ -173,6 +176,7 @@ if (fileInput) {
       }
     }
 
+    console.log("After processing, uploadedItems:", uploadedItems);
     fileInput.value = "";
   });
 }
@@ -556,17 +560,23 @@ async function handlePdfFile(file) {
 
 // Render file list with status
 function renderFileList() {
-  if (!previewContainer) {
-    console.error("uploadPreview element not found!");
+  const container = document.getElementById("uploadPreview");
+  
+  if (!container) {
+    console.error("uploadPreview element not found in DOM!");
+    console.log("Available elements with 'upload' in ID:", 
+      Array.from(document.querySelectorAll('[id*="upload"]')).map(el => el.id));
     return;
   }
   
-  previewContainer.innerHTML = "";
+  container.innerHTML = "";
 
   if (uploadedItems.length === 0) {
-    previewContainer.innerHTML = "<p style='color: #888;'>No files uploaded</p>";
+    container.innerHTML = "<p style='color: #888;'>No files uploaded</p>";
     return;
   }
+
+  console.log("Rendering", uploadedItems.length, "items");
 
   uploadedItems.forEach(item => {
     const row = document.createElement("div");
@@ -603,12 +613,11 @@ function renderFileList() {
 
     row.appendChild(name);
     row.appendChild(removeBtn);
-    previewContainer.appendChild(row);
+    container.appendChild(row);
   });
   
   console.log("File list rendered. Total items:", uploadedItems.length);
 }
-
 // Convert file to data URL
 function fileToDataURL(file) {
   return new Promise((resolve, reject) => {
