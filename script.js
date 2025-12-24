@@ -15,6 +15,26 @@ if (typeof pdfjsLib !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
+// Create uploadPreview element if it doesn't exist
+document.addEventListener('DOMContentLoaded', () => {
+  if (!document.getElementById('uploadPreview')) {
+    console.warn('uploadPreview element not found, creating it dynamically...');
+    
+    // Find the file input
+    const fileInput = document.getElementById('imageUpload');
+    if (fileInput) {
+      // Create the preview container
+      const previewDiv = document.createElement('div');
+      previewDiv.id = 'uploadPreview';
+      previewDiv.style.cssText = 'margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-height: 50px;';
+      previewDiv.innerHTML = '<p style="color: #888;">No files uploaded</p>';
+      
+      // Insert after the file input
+      fileInput.parentNode.insertBefore(previewDiv, fileInput.nextSibling);
+      console.log('uploadPreview element created successfully');
+    }
+  }
+});
 // Function to compute LCS length
 function lcsLength(s1, s2) {
     const m = s1.length;
