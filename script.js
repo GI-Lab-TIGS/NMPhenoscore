@@ -806,25 +806,63 @@ if (uploadedItems.length > 0) {
 
   pdf.setFontSize(14);
   pdf.setFont(undefined, "bold");
+  pdf.setTextColor(0, 0, 0);
   pdf.text("Attached Clinical Images / Reports", 105, y, { align: "center" });
   y += 10;
 
   for (const item of uploadedItems) {
-    if (!item.file || !item.type.startsWith("image")) continue;
+    if (!item.file) continue;
 
-    if (y > 240) {
-      pdf.addPage();
-      y = 20;
+    // Handle images
+    if (item.type === "image") {
+      if (y > 240) {
+        pdf.addPage();
+        y = 20;
+      }
+
+      const dataUrl = await fileToDataURL(item.file);
+
+      const props = pdf.getImageProperties(dataUrl);
+      const w = 170;
+      const h = (props.height * w) / props.width;
+
+      // Ensure image fits on page
+      const maxHeight = 250;
+      if (h > maxHeight) {
+        const scaleFactor = maxHeight / h;
+        const scaledW = w * scaleFactor;
+        const scaledH = maxHeight;
+        pdf.addImage(dataUrl, "JPEG", 20, y, scaledW, scaledH);
+        y += scaledH + 10;
+      } else {
+        pdf.addImage(dataUrl, "JPEG", 20, y, w, h);
+        y += h + 10;
+      }
+
+      // Add filename caption
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(item.name, 105, y, { align: "center" });
+      y += 8;
+      pdf.setTextColor(0, 0, 0);
     }
-
-    const dataUrl = await fileToDataURL(item.file);
-
-    const props = pdf.getImageProperties(dataUrl);
-    const w = 170;
-    const h = (props.height * w) / props.width;
-
-    pdf.addImage(dataUrl, "PNG", 20, y, w, h);
-    y += h + 10;
+    
+    // Handle PDFs - add a note
+    if (item.type === "pdf") {
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+      
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, "normal");
+      pdf.text(`📄 PDF Document: ${item.name}`, 25, y);
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("(PDF files cannot be embedded - please attach separately)", 25, y + 5);
+      pdf.setTextColor(0, 0, 0);
+      y += 15;
+    }
   }
 }
 
