@@ -853,8 +853,12 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("NMPhenoscore Clinical Decision Support System", 105, y, { align: "center" });
   y += 4;
   pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
-    
-  // APPEND UPLOADED FILES
+
+  // ========================================
+  // APPEND UPLOADED FILES - FIXED SECTION
+  // ========================================
+  console.log("Uploaded items at PDF generation:", uploadedItems);
+  
   if (uploadedItems.length > 0) {
     let totalImageCount = 0;
     let pdfPageCount = 0;
@@ -886,16 +890,19 @@ async function generateFinalNMPhenoscorePDF() {
       pdf.text(summary, 105, attachY, { align: "center" });
       attachY += 12;
 
+      // Process each item sequentially with proper async handling
       for (const item of uploadedItems) {
-        if (!item.file) continue;
-
-        if (item.type === "image") {
+        console.log("Processing item:", item.type, item.name, item.status);
+        
+        // HANDLE IMAGE FILES
+        if (item.type === "image" && item.file) {
           try {
             if (attachY > 230) {
               pdf.addPage();
               attachY = 20;
             }
 
+            console.log("Reading image file:", item.name);
             const dataUrl = await fileToDataURL(item.file);
             
             let imgFormat = "JPEG";
@@ -929,6 +936,7 @@ async function generateFinalNMPhenoscorePDF() {
             pdf.text(item.name, 105, attachY, { align: "center" });
             attachY += 12;
             pdf.setTextColor(0, 0, 0);
+            console.log("Image added successfully:", item.name);
           } catch (error) {
             console.error("Error adding image to PDF:", error, item.name);
             pdf.setFontSize(10);
@@ -942,7 +950,10 @@ async function generateFinalNMPhenoscorePDF() {
           }
         }
         
-        if (item.type === "pdf" && item.status === "ready" && item.images.length > 0) {
+        // HANDLE PDF FILES (converted to images)
+        if (item.type === "pdf" && item.status === "ready" && item.images && item.images.length > 0) {
+          console.log("Processing PDF with", item.images.length, "pages:", item.name);
+          
           if (attachY > 250) {
             pdf.addPage();
             attachY = 20;
@@ -962,6 +973,7 @@ async function generateFinalNMPhenoscorePDF() {
                 attachY = 20;
               }
 
+              console.log("Adding PDF page", pageImg.pageNum, "from", item.name);
               const props = pdf.getImageProperties(pageImg.dataUrl);
               const pageWidth = 170;
               const imgWidth = pageWidth;
@@ -988,6 +1000,7 @@ async function generateFinalNMPhenoscorePDF() {
               pdf.text(`Page ${pageImg.pageNum} of ${item.images.length}`, 105, attachY, { align: "center" });
               attachY += 10;
               pdf.setTextColor(0, 0, 0);
+              console.log("PDF page added successfully");
             } catch (error) {
               console.error("Error adding PDF page to report:", error, pageImg.pageNum);
               pdf.setFontSize(9);
@@ -1001,7 +1014,9 @@ async function generateFinalNMPhenoscorePDF() {
           attachY += 5;
         }
         
+        // HANDLE FAILED PDF CONVERSIONS
         if (item.type === "pdf" && item.status === "error") {
+          console.log("Showing error for failed PDF:", item.name);
           if (attachY > 260) {
             pdf.addPage();
             attachY = 20;
@@ -1029,6 +1044,7 @@ async function generateFinalNMPhenoscorePDF() {
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
 }
+
 
 // Initialize
 (async () => {
