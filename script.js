@@ -905,7 +905,9 @@ if (uploadedItems.length > 0) {
         pdf.setFontSize(11);
         pdf.setFont(undefined, "bold");
         pdf.setTextColor(0, 0, 0);
-        pdf.text(`${item.name} (${item.images.length} page${item.images.length > 1 ? 's' : ''})`, 105, attachY, { align: "center" });
+        // Clean filename to avoid encoding issues
+        const cleanName = item.name.replace(/[^\x00-\x7F]/g, '');
+        pdf.text(`PDF: ${cleanName} (${item.images.length} page${item.images.length > 1 ? 's' : ''})`, 105, attachY, { align: "center" });
         attachY += 10;
 
         // Add each converted page
@@ -971,7 +973,9 @@ if (uploadedItems.length > 0) {
         pdf.setFontSize(10);
         pdf.setFont(undefined, "bold");
         pdf.setTextColor(153, 27, 27);
-        pdf.text(`⚠ Failed to convert: ${item.name}`, 25, attachY + 3);
+        // Clean filename to avoid encoding issues
+        const cleanName = item.name.replace(/[^\x00-\x7F]/g, '');
+        pdf.text(`Failed to convert: ${cleanName}`, 25, attachY + 3);
         
         pdf.setFontSize(8);
         pdf.setFont(undefined, "normal");
