@@ -798,8 +798,8 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("NMPhenoscore Clinical Decision Support System", 105, y, { align: "center" });
   y += 4;
   pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
-  
-  // ===== APPEND UPLOADED FILES =====
+    
+// ===== APPEND UPLOADED FILES =====
 if (uploadedItems.length > 0) {
   pdf.addPage();
   let attachY = 20;
@@ -886,6 +886,7 @@ if (uploadedItems.length > 0) {
   }
 }
 
+   
   // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
