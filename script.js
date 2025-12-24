@@ -496,7 +496,7 @@ async function handlePdfFile(file) {
   const item = {
     id: crypto.randomUUID(),
     type: "pdf",
-    file: file,
+    file: null,
     name: file.name,
     status: "processing",
     images: []
