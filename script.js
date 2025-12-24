@@ -10,6 +10,11 @@ let symptomMapping = {};
 let conditionUrls = {};
 let uploadedItems = [];
 
+// Configure PDF.js worker
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
 // Function to compute LCS length
 function lcsLength(s1, s2) {
     const m = s1.length;
@@ -172,7 +177,6 @@ if (fileInput) {
   });
 }
 
-
 // Add symptom
 addBtn.addEventListener('click', addSymptom);
 input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSymptom(); });
@@ -271,33 +275,28 @@ analyzeBtn.addEventListener('click', async () => {
             top_condition = Object.keys(scores)[0] || "";
         }
         
-        // ===== STORE STEP 2 RESULTS FOR PDF =====
+        // Store step 2 results for PDF
+        localStorage.setItem("step2TopCondition", top_condition || "N/A");
 
-// Top condition
-localStorage.setItem("step2TopCondition", top_condition || "N/A");
+        const step2Matched = [];
+        if (top_condition && matched_symptoms[top_condition]) {
+            matched_symptoms[top_condition].forEach(sym => {
+                const full = symptomConditionDf.symptoms.find(s =>
+                    s.toLowerCase().includes(sym.toLowerCase())
+                );
+                const hpoMatch = full?.match(/\(HP:\d+\)/);
+                step2Matched.push({
+                    symptom: sym,
+                    hpo: hpoMatch ? hpoMatch[0].replace(/[()]/g, "") : "N/A"
+                });
+            });
+        }
+        localStorage.setItem("step2MatchedSymptoms", JSON.stringify(step2Matched));
 
-// Matched symptoms with HPO
-const step2Matched = [];
-if (top_condition && matched_symptoms[top_condition]) {
-    matched_symptoms[top_condition].forEach(sym => {
-        const full = symptomConditionDf.symptoms.find(s =>
-            s.toLowerCase().includes(sym.toLowerCase())
-        );
-        const hpoMatch = full?.match(/\(HP:\d+\)/);
-        step2Matched.push({
-            symptom: sym,
-            hpo: hpoMatch ? hpoMatch[0].replace(/[()]/g, "") : "N/A"
-        });
-    });
-}
-localStorage.setItem("step2MatchedSymptoms", JSON.stringify(step2Matched));
-
-// Other conditions (excluding top)
-const otherConditions = Object.keys(prioritized_conditions)
-    .filter(c => c !== top_condition)
-    .slice(0, 5);
-localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
-       
+        const otherConditions = Object.keys(prioritized_conditions)
+            .filter(c => c !== top_condition)
+            .slice(0, 5);
+        localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
 
         const data = {
             valid_symptoms,
@@ -368,7 +367,8 @@ localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
         }
 
         resultsDiv.innerHTML = `<div class="results-content">${html}</div>`;
-        // ===== PDF DOWNLOAD BUTTON EVENT =====
+        
+        // PDF download button
         setTimeout(() => {
             const pdfBtn = document.getElementById("downloadPdfBtn");
             if (pdfBtn) {
@@ -380,7 +380,6 @@ localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
             }
         }, 100);
 
-        
         // Sunburst Chart
         let labels = ["Potential Conditions"];
         let parents = [""];
@@ -425,7 +424,7 @@ localStorage.setItem("step2OtherConditions", JSON.stringify(otherConditions));
         const layout = { margin: {l: 0, r: 0, b: 0, t: 0}, hovermode: 'closest' };
         Plotly.newPlot('sunburstChart', chartData, layout);
 
-        // --- NEW: HPO extraction & Excel download ---
+        // HPO extraction & Excel download
         if (data.top_condition) {
             const topCondition = data.top_condition;
             const matchedSymptoms = data.matched_symptoms[topCondition] || [];
@@ -480,45 +479,110 @@ function replaceSymptom(invalid, simple) {
     }
 }
 
+// Handle image file
 function handleImageFile(file) {
   uploadedItems.push({
     id: crypto.randomUUID(),
     type: "image",
     file: file,
-    name: file.name
+    name: file.name,
+    status: "ready"
   });
   renderFileList();
 }
 
+// Handle PDF file with conversion
 async function handlePdfFile(file) {
-  uploadedItems.push({
+  const item = {
     id: crypto.randomUUID(),
     type: "pdf",
     file: file,
-    name: file.name
-  });
+    name: file.name,
+    status: "processing",
+    images: []
+  };
+  
+  uploadedItems.push(item);
   renderFileList();
+  
+  // Convert PDF to images
+  try {
+    if (typeof pdfjsLib === 'undefined') {
+      throw new Error('PDF.js library not loaded');
+    }
+    
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const numPages = pdf.numPages;
+    
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 2.0 });
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      
+      await page.render({
+        canvasContext: context,
+        viewport: viewport
+      }).promise;
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      item.images.push({
+        pageNum: pageNum,
+        dataUrl: dataUrl
+      });
+    }
+    
+    item.status = "ready";
+    renderFileList();
+    
+  } catch (error) {
+    console.error("Error converting PDF:", error);
+    item.status = "error";
+    item.errorMessage = error.message;
+    renderFileList();
+  }
 }
 
+// Render file list with status
 function renderFileList() {
   previewContainer.innerHTML = "";
 
   if (uploadedItems.length === 0) {
-    previewContainer.innerHTML = "<p class='text-gray-500'>No files uploaded</p>";
+    previewContainer.innerHTML = "<p style='color: #888;'>No files uploaded</p>";
     return;
   }
 
   uploadedItems.forEach(item => {
     const row = document.createElement("div");
-    row.className = "file-row";
+    row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 4px 0; background: #f5f5f5; border-radius: 4px;";
 
     const name = document.createElement("span");
-    name.textContent = item.name;
-    name.className = "file-name";
+    name.style.cssText = "flex: 1; font-size: 14px;";
+    
+    if (item.type === "pdf") {
+      if (item.status === "processing") {
+        name.textContent = `${item.name} (Processing...)`;
+        name.style.color = "#2B8CEE";
+      } else if (item.status === "ready") {
+        name.textContent = `${item.name} (${item.images.length} pages)`;
+        name.style.color = "#22A06B";
+      } else if (item.status === "error") {
+        name.textContent = `${item.name} (Failed)`;
+        name.style.color = "#DC2626";
+      }
+    } else {
+      name.textContent = item.name;
+    }
 
     const removeBtn = document.createElement("button");
     removeBtn.textContent = "Remove";
-    removeBtn.className = "remove-btn";
+    removeBtn.style.cssText = "padding: 4px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;";
+    removeBtn.onmouseover = () => removeBtn.style.background = "#b91c1c";
+    removeBtn.onmouseout = () => removeBtn.style.background = "#dc2626";
     removeBtn.onclick = () => {
       uploadedItems = uploadedItems.filter(f => f.id !== item.id);
       renderFileList();
@@ -529,6 +593,8 @@ function renderFileList() {
     previewContainer.appendChild(row);
   });
 }
+
+// Convert file to data URL
 function fileToDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -538,14 +604,7 @@ function fileToDataURL(file) {
   });
 }
 
-
-// Initialize
-(async () => {
-    const loaded = await loadData();
-    if (loaded) await fetchAllSymptoms();
-    else resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
-})();
-
+// Generate final PDF report
 async function generateFinalNMPhenoscorePDF() {
   if (!window.jspdf) {
     alert("jsPDF not loaded");
@@ -568,7 +627,7 @@ async function generateFinalNMPhenoscorePDF() {
   const matchedSymptoms = JSON.parse(localStorage.getItem("step2MatchedSymptoms") || "[]");
   const otherConditions = JSON.parse(localStorage.getItem("step2OtherConditions") || "[]");
 
-  // ===== HEADER SECTION =====
+  // HEADER SECTION
   pdf.setFontSize(20);
   pdf.setFont(undefined, 'bold');
   pdf.setTextColor(0, 0, 0);
@@ -581,13 +640,12 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("Neuromuscular Genetic Disorder Assessment", 105, y, { align: "center" });
   y += 12;
   
-  // Horizontal line
   pdf.setDrawColor(43, 140, 238);
   pdf.setLineWidth(0.5);
   pdf.line(20, y, 190, y);
   y += 10;
 
-  // ===== PATIENT INFORMATION BOX =====
+  // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
   pdf.rect(20, y, 170, 32, 'F');
   
@@ -622,7 +680,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text(new Date().toLocaleDateString('en-GB'), 155, y);
   y += 15;
 
-  // ===== SECTION 1: INITIAL SCREENING =====
+  // SECTION 1: INITIAL SCREENING
   pdf.setFontSize(13);
   pdf.setFont(undefined, 'bold');
   pdf.setTextColor(43, 140, 238);
@@ -632,7 +690,6 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFontSize(10);
   pdf.setTextColor(0, 0, 0);
   
-  // Assessment boxes (side by side)
   pdf.setFillColor(245, 245, 245);
   pdf.rect(25, y, 80, 18, 'F');
   pdf.setFont(undefined, 'bold');
@@ -655,7 +712,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFontSize(10);
   y += 25;
 
-  // Clinical presentation (two columns)
+  // Clinical presentation
   if (step1Symptoms.length > 0) {
     pdf.setFont(undefined, 'bold');
     pdf.text(`Clinical Presentation (${step1Symptoms.length} symptoms identified):`, 25, y);
@@ -686,7 +743,7 @@ async function generateFinalNMPhenoscorePDF() {
     y = Math.max(leftY, rightY) + 5;
   }
 
-  // ===== SECTION 2: DIFFERENTIAL DIAGNOSIS =====
+  // SECTION 2: DIFFERENTIAL DIAGNOSIS
   if (y > 250) { pdf.addPage(); y = 20; }
   
   pdf.setFontSize(13);
@@ -695,7 +752,6 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("2. CONDITION SPECIFIC DIAGNOSIS", 20, y);
   y += 8;
 
-  // Primary diagnosis box
   pdf.setFontSize(10);
   pdf.setTextColor(0, 0, 0);
   pdf.setFillColor(240, 253, 244);
@@ -712,7 +768,6 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setTextColor(0, 0, 0);
   y += 28;
 
-  // Matched symptoms with HPO
   pdf.setFontSize(10);
   pdf.setFont(undefined, 'bold');
   pdf.text("Matched Clinical Features:", 25, y);
@@ -738,7 +793,7 @@ async function generateFinalNMPhenoscorePDF() {
   }
   y += 8;
   
-  // ===== SECTION 3: OTHER CONDITIONS =====
+  // SECTION 3: OTHER CONDITIONS
   if (y > 245) { pdf.addPage(); y = 20; }
   
   pdf.setFontSize(13);
@@ -768,7 +823,7 @@ async function generateFinalNMPhenoscorePDF() {
   }
   y += 8;
 
-  // ===== DISCLAIMER =====
+  // DISCLAIMER
   if (y > 250) { pdf.addPage(); y = 20; }
   
   pdf.setFillColor(255, 250, 240);
@@ -788,7 +843,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text(disclaimerLines, 25, y + 14);
   y += 35;
   
-  // ===== FOOTER =====
+  // FOOTER
   pdf.setDrawColor(200, 200, 200);
   pdf.line(20, y, 190, y);
   y += 5;
@@ -799,131 +854,60 @@ async function generateFinalNMPhenoscorePDF() {
   y += 4;
   pdf.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 105, y, { align: "center" });
     
-// ===== APPEND UPLOADED FILES =====
-if (uploadedItems.length > 0) {
-  // Count images and PDF pages
-  let totalImageCount = 0;
-  let pdfPageCount = 0;
-  
-  uploadedItems.forEach(item => {
-    if (item.type === "image") {
-      totalImageCount++;
-    } else if (item.type === "pdf" && item.status === "ready") {
-      totalImageCount += item.images.length;
-      pdfPageCount += item.images.length;
-    }
-  });
-  
-  if (totalImageCount > 0) {
-    pdf.addPage();
-    let attachY = 20;
-
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, "bold");
-    pdf.setTextColor(0, 0, 0);
-    pdf.text("Attached Clinical Images / Reports", 105, attachY, { align: "center" });
-    attachY += 8;
+  // APPEND UPLOADED FILES
+  if (uploadedItems.length > 0) {
+    let totalImageCount = 0;
+    let pdfPageCount = 0;
     
-    // Add summary
-    pdf.setFontSize(10);
-    pdf.setFont(undefined, "normal");
-    pdf.setTextColor(80, 80, 80);
-    const imageOnlyCount = uploadedItems.filter(i => i.type === "image").length;
-    const summary = `${imageOnlyCount} image file(s)${pdfPageCount > 0 ? ` + ${pdfPageCount} PDF page(s) converted to images` : ''}`;
-    pdf.text(summary, 105, attachY, { align: "center" });
-    attachY += 12;
-
-    for (const item of uploadedItems) {
-      if (!item.file) continue;
-
-      // Handle regular images
+    uploadedItems.forEach(item => {
       if (item.type === "image") {
-        try {
-          if (attachY > 230) {
-            pdf.addPage();
-            attachY = 20;
-          }
-
-          const dataUrl = await fileToDataURL(item.file);
-          
-          // Detect image format from data URL
-          let imgFormat = "JPEG";
-          if (dataUrl.includes("image/png")) imgFormat = "PNG";
-          else if (dataUrl.includes("image/jpeg") || dataUrl.includes("image/jpg")) imgFormat = "JPEG";
-          else if (dataUrl.includes("image/gif")) imgFormat = "GIF";
-
-          const props = pdf.getImageProperties(dataUrl);
-          const pageWidth = 170;
-          const imgWidth = pageWidth;
-          const imgHeight = (props.height * imgWidth) / props.width;
-
-          // Ensure image fits on page
-          const maxHeight = 200;
-          let finalWidth = imgWidth;
-          let finalHeight = imgHeight;
-          
-          if (imgHeight > maxHeight) {
-            const scaleFactor = maxHeight / imgHeight;
-            finalWidth = imgWidth * scaleFactor;
-            finalHeight = maxHeight;
-          }
-
-          // Center the image horizontally
-          const xPos = (210 - finalWidth) / 2;
-
-          pdf.addImage(dataUrl, imgFormat, xPos, attachY, finalWidth, finalHeight);
-          attachY += finalHeight + 5;
-
-          // Add filename caption
-          pdf.setFontSize(9);
-          pdf.setFont(undefined, "normal");
-          pdf.setTextColor(100, 100, 100);
-          pdf.text(item.name, 105, attachY, { align: "center" });
-          attachY += 12;
-          pdf.setTextColor(0, 0, 0);
-        } catch (error) {
-          console.error("Error adding image to PDF:", error, item.name);
-          pdf.setFontSize(10);
-          pdf.setTextColor(200, 0, 0);
-          pdf.text(`⚠ Error loading image: ${item.name}`, 25, attachY);
-          pdf.setFontSize(8);
-          pdf.setTextColor(150, 150, 150);
-          pdf.text("Please ensure the image format is supported (JPG, PNG, GIF)", 25, attachY + 5);
-          attachY += 15;
-          pdf.setTextColor(0, 0, 0);
-        }
+        totalImageCount++;
+      } else if (item.type === "pdf" && item.status === "ready") {
+        totalImageCount += item.images.length;
+        pdfPageCount += item.images.length;
       }
-      
-      // Handle converted PDF pages
-      if (item.type === "pdf" && item.status === "ready" && item.images.length > 0) {
-        // Add PDF document header
-        if (attachY > 250) {
-          pdf.addPage();
-          attachY = 20;
-        }
-        
-        pdf.setFontSize(11);
-        pdf.setFont(undefined, "bold");
-        pdf.setTextColor(0, 0, 0);
-        // Clean filename to avoid encoding issues
-        const cleanName = item.name.replace(/[^\x00-\x7F]/g, '');
-        pdf.text(`PDF: ${cleanName} (${item.images.length} page${item.images.length > 1 ? 's' : ''})`, 105, attachY, { align: "center" });
-        attachY += 10;
+    });
+    
+    if (totalImageCount > 0) {
+      pdf.addPage();
+      let attachY = 20;
 
-        // Add each converted page
-        for (const pageImg of item.images) {
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, "bold");
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Attached Clinical Images / Reports", 105, attachY, { align: "center" });
+      attachY += 8;
+      
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, "normal");
+      pdf.setTextColor(80, 80, 80);
+      const imageOnlyCount = uploadedItems.filter(i => i.type === "image").length;
+      const summary = `${imageOnlyCount} image file(s)${pdfPageCount > 0 ? ` + ${pdfPageCount} PDF page(s) converted to images` : ''}`;
+      pdf.text(summary, 105, attachY, { align: "center" });
+      attachY += 12;
+
+      for (const item of uploadedItems) {
+        if (!item.file) continue;
+
+        if (item.type === "image") {
           try {
             if (attachY > 230) {
               pdf.addPage();
               attachY = 20;
             }
 
-            const props = pdf.getImageProperties(pageImg.dataUrl);
+            const dataUrl = await fileToDataURL(item.file);
+            
+            let imgFormat = "JPEG";
+            if (dataUrl.includes("image/png")) imgFormat = "PNG";
+            else if (dataUrl.includes("image/jpeg") || dataUrl.includes("image/jpg")) imgFormat = "JPEG";
+            else if (dataUrl.includes("image/gif")) imgFormat = "GIF";
+
+            const props = pdf.getImageProperties(dataUrl);
             const pageWidth = 170;
             const imgWidth = pageWidth;
             const imgHeight = (props.height * imgWidth) / props.width;
 
-            // Ensure image fits on page
             const maxHeight = 200;
             let finalWidth = imgWidth;
             let finalHeight = imgHeight;
@@ -934,60 +918,121 @@ if (uploadedItems.length > 0) {
               finalHeight = maxHeight;
             }
 
-            // Center the image horizontally
             const xPos = (210 - finalWidth) / 2;
 
-            pdf.addImage(pageImg.dataUrl, "JPEG", xPos, attachY, finalWidth, finalHeight);
+            pdf.addImage(dataUrl, imgFormat, xPos, attachY, finalWidth, finalHeight);
             attachY += finalHeight + 5;
 
-            // Add page number caption
-            pdf.setFontSize(8);
+            pdf.setFontSize(9);
             pdf.setFont(undefined, "normal");
             pdf.setTextColor(100, 100, 100);
-            pdf.text(`Page ${pageImg.pageNum} of ${item.images.length}`, 105, attachY, { align: "center" });
-            attachY += 10;
+            pdf.text(item.name, 105, attachY, { align: "center" });
+            attachY += 12;
             pdf.setTextColor(0, 0, 0);
           } catch (error) {
-            console.error("Error adding PDF page to report:", error, pageImg.pageNum);
-            pdf.setFontSize(9);
+            console.error("Error adding image to PDF:", error, item.name);
+            pdf.setFontSize(10);
             pdf.setTextColor(200, 0, 0);
-            pdf.text(`⚠ Error loading page ${pageImg.pageNum}`, 25, attachY);
-            attachY += 8;
+            pdf.text(`⚠ Error loading image: ${item.name}`, 25, attachY);
+            pdf.setFontSize(8);
+            pdf.setTextColor(150, 150, 150);
+            pdf.text("Please ensure the image format is supported (JPG, PNG, GIF)", 25, attachY + 5);
+            attachY += 15;
             pdf.setTextColor(0, 0, 0);
           }
         }
         
-        attachY += 5;
-      }
-      
-      // Handle failed PDF conversions
-      if (item.type === "pdf" && item.status === "error") {
-        if (attachY > 260) {
-          pdf.addPage();
-          attachY = 20;
+        if (item.type === "pdf" && item.status === "ready" && item.images.length > 0) {
+          if (attachY > 250) {
+            pdf.addPage();
+            attachY = 20;
+          }
+          
+          pdf.setFontSize(11);
+          pdf.setFont(undefined, "bold");
+          pdf.setTextColor(0, 0, 0);
+          const cleanName = item.name.replace(/[^\x00-\x7F]/g, '');
+          pdf.text(`PDF: ${cleanName} (${item.images.length} page${item.images.length > 1 ? 's' : ''})`, 105, attachY, { align: "center" });
+          attachY += 10;
+
+          for (const pageImg of item.images) {
+            try {
+              if (attachY > 230) {
+                pdf.addPage();
+                attachY = 20;
+              }
+
+              const props = pdf.getImageProperties(pageImg.dataUrl);
+              const pageWidth = 170;
+              const imgWidth = pageWidth;
+              const imgHeight = (props.height * imgWidth) / props.width;
+
+              const maxHeight = 200;
+              let finalWidth = imgWidth;
+              let finalHeight = imgHeight;
+              
+              if (imgHeight > maxHeight) {
+                const scaleFactor = maxHeight / imgHeight;
+                finalWidth = imgWidth * scaleFactor;
+                finalHeight = maxHeight;
+              }
+
+              const xPos = (210 - finalWidth) / 2;
+
+              pdf.addImage(pageImg.dataUrl, "JPEG", xPos, attachY, finalWidth, finalHeight);
+              attachY += finalHeight + 5;
+
+              pdf.setFontSize(8);
+              pdf.setFont(undefined, "normal");
+              pdf.setTextColor(100, 100, 100);
+              pdf.text(`Page ${pageImg.pageNum} of ${item.images.length}`, 105, attachY, { align: "center" });
+              attachY += 10;
+              pdf.setTextColor(0, 0, 0);
+            } catch (error) {
+              console.error("Error adding PDF page to report:", error, pageImg.pageNum);
+              pdf.setFontSize(9);
+              pdf.setTextColor(200, 0, 0);
+              pdf.text(`⚠ Error loading page ${pageImg.pageNum}`, 25, attachY);
+              attachY += 8;
+              pdf.setTextColor(0, 0, 0);
+            }
+          }
+          
+          attachY += 5;
         }
         
-        pdf.setFillColor(254, 226, 226);
-        pdf.rect(20, attachY - 3, 170, 15, 'F');
-        
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, "bold");
-        pdf.setTextColor(153, 27, 27);
-        // Clean filename to avoid encoding issues
-        const cleanName = item.name.replace(/[^\x00-\x7F]/g, '');
-        pdf.text(`Failed to convert: ${cleanName}`, 25, attachY + 3);
-        
-        pdf.setFontSize(8);
-        pdf.setFont(undefined, "normal");
-        pdf.text("This PDF could not be converted. Please attach separately.", 25, attachY + 8);
-        attachY += 20;
-        pdf.setTextColor(0, 0, 0);
+        if (item.type === "pdf" && item.status === "error") {
+          if (attachY > 260) {
+            pdf.addPage();
+            attachY = 20;
+          }
+          
+          pdf.setFillColor(254, 226, 226);
+          pdf.rect(20, attachY - 3, 170, 15, 'F');
+          
+          pdf.setFontSize(10);
+          pdf.setFont(undefined, "bold");
+          pdf.setTextColor(153, 27, 27);
+          const cleanName = item.name.replace(/[^\x00-\x7F]/g, '');
+          pdf.text(`Failed to convert: ${cleanName}`, 25, attachY + 3);
+          
+          pdf.setFontSize(8);
+          pdf.setFont(undefined, "normal");
+          pdf.text("This PDF could not be converted. Please attach separately.", 25, attachY + 8);
+          attachY += 20;
+          pdf.setTextColor(0, 0, 0);
+        }
       }
     }
   }
-}
 
-  // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
 }
+
+// Initialize
+(async () => {
+    const loaded = await loadData();
+    if (loaded) await fetchAllSymptoms();
+    else resultsDiv.innerHTML = `<div class="error"><p>Error: Failed to load data files.</p></div>`;
+})();
