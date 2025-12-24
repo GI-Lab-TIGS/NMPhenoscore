@@ -801,92 +801,188 @@ async function generateFinalNMPhenoscorePDF() {
     
 // ===== APPEND UPLOADED FILES =====
 if (uploadedItems.length > 0) {
-  pdf.addPage();
-  let attachY = 20;
-
-  pdf.setFontSize(14);
-  pdf.setFont(undefined, "bold");
-  pdf.setTextColor(0, 0, 0);
-  pdf.text("Attached Clinical Images / Reports", 105, attachY, { align: "center" });
-  attachY += 15;
-
-  for (const item of uploadedItems) {
-    if (!item.file) continue;
-
-    // Handle images
+  // Count images and PDF pages
+  let totalImageCount = 0;
+  let pdfPageCount = 0;
+  
+  uploadedItems.forEach(item => {
     if (item.type === "image") {
-      try {
-        if (attachY > 240) {
+      totalImageCount++;
+    } else if (item.type === "pdf" && item.status === "ready") {
+      totalImageCount += item.images.length;
+      pdfPageCount += item.images.length;
+    }
+  });
+  
+  if (totalImageCount > 0) {
+    pdf.addPage();
+    let attachY = 20;
+
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, "bold");
+    pdf.setTextColor(0, 0, 0);
+    pdf.text("Attached Clinical Images / Reports", 105, attachY, { align: "center" });
+    attachY += 8;
+    
+    // Add summary
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, "normal");
+    pdf.setTextColor(80, 80, 80);
+    const imageOnlyCount = uploadedItems.filter(i => i.type === "image").length;
+    const summary = `${imageOnlyCount} image file(s)${pdfPageCount > 0 ? ` + ${pdfPageCount} PDF page(s) converted to images` : ''}`;
+    pdf.text(summary, 105, attachY, { align: "center" });
+    attachY += 12;
+
+    for (const item of uploadedItems) {
+      if (!item.file) continue;
+
+      // Handle regular images
+      if (item.type === "image") {
+        try {
+          if (attachY > 230) {
+            pdf.addPage();
+            attachY = 20;
+          }
+
+          const dataUrl = await fileToDataURL(item.file);
+          
+          // Detect image format from data URL
+          let imgFormat = "JPEG";
+          if (dataUrl.includes("image/png")) imgFormat = "PNG";
+          else if (dataUrl.includes("image/jpeg") || dataUrl.includes("image/jpg")) imgFormat = "JPEG";
+          else if (dataUrl.includes("image/gif")) imgFormat = "GIF";
+
+          const props = pdf.getImageProperties(dataUrl);
+          const pageWidth = 170;
+          const imgWidth = pageWidth;
+          const imgHeight = (props.height * imgWidth) / props.width;
+
+          // Ensure image fits on page
+          const maxHeight = 200;
+          let finalWidth = imgWidth;
+          let finalHeight = imgHeight;
+          
+          if (imgHeight > maxHeight) {
+            const scaleFactor = maxHeight / imgHeight;
+            finalWidth = imgWidth * scaleFactor;
+            finalHeight = maxHeight;
+          }
+
+          // Center the image horizontally
+          const xPos = (210 - finalWidth) / 2;
+
+          pdf.addImage(dataUrl, imgFormat, xPos, attachY, finalWidth, finalHeight);
+          attachY += finalHeight + 5;
+
+          // Add filename caption
+          pdf.setFontSize(9);
+          pdf.setFont(undefined, "normal");
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(item.name, 105, attachY, { align: "center" });
+          attachY += 12;
+          pdf.setTextColor(0, 0, 0);
+        } catch (error) {
+          console.error("Error adding image to PDF:", error, item.name);
+          pdf.setFontSize(10);
+          pdf.setTextColor(200, 0, 0);
+          pdf.text(`⚠ Error loading image: ${item.name}`, 25, attachY);
+          pdf.setFontSize(8);
+          pdf.setTextColor(150, 150, 150);
+          pdf.text("Please ensure the image format is supported (JPG, PNG, GIF)", 25, attachY + 5);
+          attachY += 15;
+          pdf.setTextColor(0, 0, 0);
+        }
+      }
+      
+      // Handle converted PDF pages
+      if (item.type === "pdf" && item.status === "ready" && item.images.length > 0) {
+        // Add PDF document header
+        if (attachY > 250) {
           pdf.addPage();
           attachY = 20;
         }
-
-        const dataUrl = await fileToDataURL(item.file);
         
-        // Detect image format from data URL
-        let imgFormat = "JPEG";
-        if (dataUrl.includes("image/png")) imgFormat = "PNG";
-        else if (dataUrl.includes("image/jpeg") || dataUrl.includes("image/jpg")) imgFormat = "JPEG";
+        pdf.setFontSize(11);
+        pdf.setFont(undefined, "bold");
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`${item.name} (${item.images.length} page${item.images.length > 1 ? 's' : ''})`, 105, attachY, { align: "center" });
+        attachY += 10;
 
-        const props = pdf.getImageProperties(dataUrl);
-        const pageWidth = 170;
-        const imgWidth = pageWidth;
-        const imgHeight = (props.height * imgWidth) / props.width;
+        // Add each converted page
+        for (const pageImg of item.images) {
+          try {
+            if (attachY > 230) {
+              pdf.addPage();
+              attachY = 20;
+            }
 
-        // Ensure image fits on page
-        const maxHeight = 220;
-        let finalWidth = imgWidth;
-        let finalHeight = imgHeight;
-        
-        if (imgHeight > maxHeight) {
-          const scaleFactor = maxHeight / imgHeight;
-          finalWidth = imgWidth * scaleFactor;
-          finalHeight = maxHeight;
+            const props = pdf.getImageProperties(pageImg.dataUrl);
+            const pageWidth = 170;
+            const imgWidth = pageWidth;
+            const imgHeight = (props.height * imgWidth) / props.width;
+
+            // Ensure image fits on page
+            const maxHeight = 200;
+            let finalWidth = imgWidth;
+            let finalHeight = imgHeight;
+            
+            if (imgHeight > maxHeight) {
+              const scaleFactor = maxHeight / imgHeight;
+              finalWidth = imgWidth * scaleFactor;
+              finalHeight = maxHeight;
+            }
+
+            // Center the image horizontally
+            const xPos = (210 - finalWidth) / 2;
+
+            pdf.addImage(pageImg.dataUrl, "JPEG", xPos, attachY, finalWidth, finalHeight);
+            attachY += finalHeight + 5;
+
+            // Add page number caption
+            pdf.setFontSize(8);
+            pdf.setFont(undefined, "normal");
+            pdf.setTextColor(100, 100, 100);
+            pdf.text(`Page ${pageImg.pageNum} of ${item.images.length}`, 105, attachY, { align: "center" });
+            attachY += 10;
+            pdf.setTextColor(0, 0, 0);
+          } catch (error) {
+            console.error("Error adding PDF page to report:", error, pageImg.pageNum);
+            pdf.setFontSize(9);
+            pdf.setTextColor(200, 0, 0);
+            pdf.text(`⚠ Error loading page ${pageImg.pageNum}`, 25, attachY);
+            attachY += 8;
+            pdf.setTextColor(0, 0, 0);
+          }
         }
-
-        // Center the image horizontally
-        const xPos = (210 - finalWidth) / 2;
-
-        pdf.addImage(dataUrl, imgFormat, xPos, attachY, finalWidth, finalHeight);
-        attachY += finalHeight + 5;
-
-        // Add filename caption
-        pdf.setFontSize(9);
-        pdf.setFont(undefined, "normal");
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(item.name, 105, attachY, { align: "center" });
-        attachY += 10;
-        pdf.setTextColor(0, 0, 0);
-      } catch (error) {
-        console.error("Error adding image to PDF:", error, item.name);
-        pdf.setFontSize(10);
-        pdf.setTextColor(200, 0, 0);
-        pdf.text(`⚠ Error loading image: ${item.name}`, 25, attachY);
-        attachY += 10;
-        pdf.setTextColor(0, 0, 0);
-      }
-    }
-    
-    // Handle PDFs - add a note
-    if (item.type === "pdf") {
-      if (attachY > 270) {
-        pdf.addPage();
-        attachY = 20;
+        
+        attachY += 5;
       }
       
-      pdf.setFontSize(10);
-      pdf.setFont(undefined, "normal");
-      pdf.text(`📄 PDF Document: ${item.name}`, 25, attachY);
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("(PDF files cannot be embedded - please attach separately)", 25, attachY + 5);
-      pdf.setTextColor(0, 0, 0);
-      attachY += 15;
+      // Handle failed PDF conversions
+      if (item.type === "pdf" && item.status === "error") {
+        if (attachY > 260) {
+          pdf.addPage();
+          attachY = 20;
+        }
+        
+        pdf.setFillColor(254, 226, 226);
+        pdf.rect(20, attachY - 3, 170, 15, 'F');
+        
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, "bold");
+        pdf.setTextColor(153, 27, 27);
+        pdf.text(`⚠ Failed to convert: ${item.name}`, 25, attachY + 3);
+        
+        pdf.setFontSize(8);
+        pdf.setFont(undefined, "normal");
+        pdf.text("This PDF could not be converted. Please attach separately.", 25, attachY + 8);
+        attachY += 20;
+        pdf.setTextColor(0, 0, 0);
+      }
     }
   }
 }
 
-   
   // Save file
   const safeName = patientName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_NMPhenoscore_Report.pdf`);
