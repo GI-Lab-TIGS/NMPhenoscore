@@ -362,18 +362,6 @@
             background-color: #ffffff;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s, border 0.3s;
-            border: 3px solid transparent;
-        }
-
-        .result-display-card.result-positive {
-            background-color: #fef2f2;
-            border-color: #fca5a5;
-        }
-
-        .result-display-card.result-negative {
-            background-color: #f0fdf4;
-            border-color: #86efac;
         }
         
         .result-display-card h4 {
@@ -482,14 +470,16 @@
             text-align: center;
             border-top: 1px solid #e5e7eb;
         }
-
         .patient-center {
-            display: flex;
-            justify-content: center;  
-            align-items: flex-start;  
-            padding-top: 60px; 
-            min-height: calc(100vh - 180px);
-        }
+    display: flex;
+    justify-content: center;  
+    align-items: flex-start;  
+    padding-top: 60px; 
+    min-height: calc(100vh - 180px);
+}
+
+
+
     </style>
 </head>
 <body>
@@ -501,7 +491,7 @@
     <div id="patient-profile" class="main-container patient-center">
         <div style="
             max-width: 1000px;
-            width: 100%;
+            width: 100%
             margin: 0 auto;
             background: #ffffff;
             padding: 80px;
@@ -663,7 +653,6 @@
 
             const updateScore = () => {
                 let totalScore = 0;
-                const resultCard = document.getElementById('result-card');
                 
                 checkboxes.forEach(checkbox => {
                     const listItem = checkbox.closest('li');
@@ -707,14 +696,6 @@
                 
                 statusButton.classList.remove('status-positive', 'status-negative');
                 statusButton.classList.add(isPositive ? 'status-positive' : 'status-negative');
-
-                // Update result card background
-                resultCard.classList.remove('result-positive', 'result-negative');
-                if (isPositive) {
-                    resultCard.classList.add('result-positive');
-                } else {
-                    resultCard.classList.add('result-negative');
-                }
 
                 chartContainer.style.borderColor = isPositive ? 'var(--success-green)' : 'var(--warning-yellow)';
 
@@ -788,3 +769,17 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
