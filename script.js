@@ -302,17 +302,21 @@ analyzeBtn.addEventListener('click', async () => {
         // Store step 2 results for PDF
         localStorage.setItem("step2TopCondition", top_condition || "N/A");
         localStorage.setItem("step2SelectedSymptoms", JSON.stringify(symptoms));
-
-        // Save HPO terms for selected symptoms
+        // Save HPO terms for selected symptoms (FIXED VERSION)
         const selectedSymptomsWithHPO = symptoms.map(sym => {
-          const fullMatch = symptomConditionDf.symptoms.find(s =>
-            s.toLowerCase().includes(sym.toLowerCase()) ||
-            extractSymptomName(s).toLowerCase() === sym.toLowerCase()
-          );
-          const hpoMatch = fullMatch?.match(/HP:\d+/);
+          const full = symptomMapping[sym.toLowerCase()];
+          let hpo = "N/A";
+
+          if (full) {
+            const match = full.match(/\(HP:\d+\)/);
+            if (match) {
+              hpo = match[0].replace(/[()]/g, "");
+            }
+          }
+
           return {
             symptom: sym,
-            hpo: hpoMatch ? hpoMatch[0] : "N/A"
+            hpo: hpo
           };
         });
         localStorage.setItem("step2SelectedSymptomsHPO", JSON.stringify(selectedSymptomsWithHPO));
@@ -859,7 +863,7 @@ async function generateFinalNMPhenoscorePDF() {
   // --- SELECTED SYMPTOMS ---
   pdf.setFontSize(10);
   pdf.setFont(undefined, 'bold');
-  pdf.text("Selected Symptoms (Entered by User):", 25, y);
+  pdf.text("Selected Symptoms:", 25, y);
   y += 6;
 
   pdf.setFont(undefined, 'normal');
@@ -886,7 +890,7 @@ async function generateFinalNMPhenoscorePDF() {
   // --- MATCHED CLINICAL FEATURES ---
   pdf.setFontSize(10);
   pdf.setFont(undefined, 'bold');
-  pdf.text("Matched Clinical Features (from Database):", 25, y);
+  pdf.text("Matched Clinical Features:", 25, y);
   y += 6;
 
   pdf.setFont(undefined, 'normal');
