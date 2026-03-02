@@ -301,6 +301,7 @@ analyzeBtn.addEventListener('click', async () => {
         
         // Store step 2 results for PDF
         localStorage.setItem("step2TopCondition", top_condition || "N/A");
+        localStorage.setItem("step2SelectedSymptoms", JSON.stringify(symptoms));
 
         const step2Matched = [];
         if (top_condition && matched_symptoms[top_condition]) {
@@ -672,6 +673,7 @@ async function generateFinalNMPhenoscorePDF() {
   const topCondition = localStorage.getItem("step2TopCondition") || "N/A";
   const matchedSymptoms = JSON.parse(localStorage.getItem("step2MatchedSymptoms") || "[]");
   const otherConditions = JSON.parse(localStorage.getItem("step2OtherConditions") || "[]");
+  const selectedSymptoms = JSON.parse(localStorage.getItem("step2SelectedSymptoms") || "[]");
 
   // HEADER SECTION
   pdf.setFontSize(20);
@@ -814,7 +816,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setTextColor(0, 0, 0);
   y += 28;
 
-  pdf.setFontSize(10);
+  /*pdf.setFontSize(10);
   pdf.setFont(undefined, 'bold');
   pdf.text("Matched Clinical Features:", 25, y);
   y += 6;
@@ -822,6 +824,53 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFont(undefined, 'normal');
   pdf.setFontSize(9);
   
+  if (matchedSymptoms.length > 0) {
+    matchedSymptoms.forEach(item => {
+      if (y > 265) { pdf.addPage(); y = 20; pdf.setFontSize(9); }
+      pdf.text(`• ${item.symptom}`, 30, y);
+      if (item.hpo && item.hpo !== "N/A" && item.hpo !== "") {
+        pdf.setTextColor(43, 140, 238);
+        pdf.text(`(${item.hpo})`, 32 + pdf.getTextWidth(`• ${item.symptom} `), y);
+        pdf.setTextColor(0, 0, 0);
+      }
+      y += 5;
+    });
+  } else {
+    pdf.text("No specific clinical correlations identified", 30, y);
+    y += 5;
+  }
+  y += 8;*/
+
+  // --- SELECTED SYMPTOMS ---
+  pdf.setFontSize(10);
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Selected Symptoms (Entered by User):", 25, y);
+  y += 6;
+
+  pdf.setFont(undefined, 'normal');
+  pdf.setFontSize(9);
+
+  if (selectedSymptoms.length > 0) {
+    selectedSymptoms.forEach(sym => {
+      if (y > 265) { pdf.addPage(); y = 20; pdf.setFontSize(9); }
+      pdf.text(`• ${sym}`, 30, y);
+      y += 5;
+    });
+  } else {
+    pdf.text("No symptoms selected", 30, y);
+    y += 5;
+  }
+  y += 6;
+
+  // --- MATCHED CLINICAL FEATURES ---
+  pdf.setFontSize(10);
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Matched Clinical Features (from Database):", 25, y);
+  y += 6;
+
+  pdf.setFont(undefined, 'normal');
+  pdf.setFontSize(9);
+
   if (matchedSymptoms.length > 0) {
     matchedSymptoms.forEach(item => {
       if (y > 265) { pdf.addPage(); y = 20; pdf.setFontSize(9); }
