@@ -303,6 +303,20 @@ analyzeBtn.addEventListener('click', async () => {
         localStorage.setItem("step2TopCondition", top_condition || "N/A");
         localStorage.setItem("step2SelectedSymptoms", JSON.stringify(symptoms));
 
+        // Save HPO terms for selected symptoms
+        const selectedSymptomsWithHPO = symptoms.map(sym => {
+          const fullMatch = symptomConditionDf.symptoms.find(s =>
+            s.toLowerCase().includes(sym.toLowerCase()) ||
+            extractSymptomName(s).toLowerCase() === sym.toLowerCase()
+          );
+          const hpoMatch = fullMatch?.match(/HP:\d+/);
+          return {
+            symptom: sym,
+            hpo: hpoMatch ? hpoMatch[0] : "N/A"
+          };
+        });
+        localStorage.setItem("step2SelectedSymptomsHPO", JSON.stringify(selectedSymptomsWithHPO));
+
         const step2Matched = [];
         if (top_condition && matched_symptoms[top_condition]) {
             matched_symptoms[top_condition].forEach(sym => {
@@ -674,6 +688,7 @@ async function generateFinalNMPhenoscorePDF() {
   const matchedSymptoms = JSON.parse(localStorage.getItem("step2MatchedSymptoms") || "[]");
   const otherConditions = JSON.parse(localStorage.getItem("step2OtherConditions") || "[]");
   const selectedSymptoms = JSON.parse(localStorage.getItem("step2SelectedSymptoms") || "[]");
+  const selectedSymptomsHPO = JSON.parse(localStorage.getItem("step2SelectedSymptomsHPO") || "[]");
 
   // HEADER SECTION
   pdf.setFontSize(20);
@@ -850,10 +865,16 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFont(undefined, 'normal');
   pdf.setFontSize(9);
 
-  if (selectedSymptoms.length > 0) {
-    selectedSymptoms.forEach(sym => {
+  if (selectedSymptomsHPO.length > 0) {
+    selectedSymptomsHPO.forEach(item => {
       if (y > 265) { pdf.addPage(); y = 20; pdf.setFontSize(9); }
-      pdf.text(`• ${sym}`, 30, y);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`• ${item.symptom}`, 30, y);
+      if (item.hpo && item.hpo !== "N/A") {
+        pdf.setTextColor(43, 140, 238);
+        pdf.text(`(${item.hpo})`, 32 + pdf.getTextWidth(`• ${item.symptom} `), y);
+        pdf.setTextColor(0, 0, 0);
+      }
       y += 5;
     });
   } else {
