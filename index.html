@@ -1,270 +1,771 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NMphenoscore Calculator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMphenoscore Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        :root {
+            --primary-blue: #3b82f6;
+            --secondary-dark: #1e3a8a;
+            --background-light: #f3f4f6;
+            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --border-color: #d1d5db;
+            --success-green: #10b981;
+            --warning-yellow: #e3646a;
+            --color-systemic: #fca5a5;
+            --color-movement: #93c5fd;
+            --color-muscular: #86efac;
+            --color-sensory: #fde68a;
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            background: var(--background-light);
+            color: #1f2937;
+        }
+        
+        #app-banner {
+            width: 100%;
+            background: linear-gradient(135deg, var(--secondary-dark), var(--primary-blue));
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin-bottom: 40px;
+        }
 
-<style>
-:root {
-    --primary-blue: #3b82f6;
-    --secondary-dark: #1e3a8a;
-    --background-light: #f3f4f6;
-    --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    --border-color: #d1d5db;
-    --success-green: #10b981;
-    --danger-red: #e3646a;
-}
+        #app-banner h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 0.05em;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
 
-body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    background: var(--background-light);
+        #app-banner p {
+            font-size: 1.1rem;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1400px;
+            padding: 0 20px 40px 20px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 500px 1fr; 
+            grid-template-rows: auto auto auto;
+            align-items: center;
+            justify-items: center;
+            gap: 20px 0;
+            width: 100%;
+        }
+
+        .symptom-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            width: 360px;
+            height: 420px;
+            text-align: left;
+            border: 1px solid #e5e7eb;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .symptom-box h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--primary-blue);
+            border-bottom: 4px solid var(--primary-blue);
+            padding-bottom: 8px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        
+        .symptom-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .symptom-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .symptom-list li {
+            margin: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            font-size: 1em;
+            line-height: 1.4;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+        
+        .symptom-list li:hover {
+            background-color: #f9fafb;
+        }
+
+        .symptom-list input[type="checkbox"] {
+            margin-top: 2px;
+            margin-right: 12px;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-blue);
+            cursor: pointer;
+        }
+        
+        .symptom-list li label {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .symptom-list li.symptom-selected.systemic {
+            background-color: rgba(252, 165, 165, 0.3);
+            border-left-color: var(--color-systemic);
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .symptom-list li.symptom-selected.movement {
+            background-color: rgba(147, 197, 253, 0.3);
+            border-left-color: var(--color-movement);
+            color: var(--secondary-dark);
+            font-weight: 600;
+        }
+
+        .symptom-list li.symptom-selected.muscular {
+            background-color: rgba(134, 239, 172, 0.3);
+            border-left-color: var(--color-muscular);
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .symptom-list li.symptom-selected.sensory {
+            background-color: rgba(253, 230, 138, 0.3);
+            border-left-color: var(--color-sensory);
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        .symptom-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .symptom-list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .symptom-list-container::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 3px;
+        }
+
+        .symptom-list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-dark);
+        }
+
+        .box-systemic { 
+            grid-column: 1 / 2; 
+            grid-row: 1 / 2; 
+            justify-self: end; 
+            align-self: end; 
+        }
+        
+        .box-movement { 
+            grid-column: 3 / 4; 
+            grid-row: 1 / 2; 
+            justify-self: start; 
+            align-self: end; 
+        }
+        
+        .box-muscular { 
+            grid-column: 1 / 2; 
+            grid-row: 3 / 4; 
+            justify-self: end; 
+            align-self: start; 
+        }
+        
+        .box-sensory { 
+            grid-column: 3 / 4; 
+            grid-row: 3 / 4; 
+            justify-self: start; 
+            align-self: start; 
+        }
+
+        .chart-container {
+            grid-column: 2 / 3;
+            grid-row: 1 / 4;
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.1);
+            border: 4px solid var(--border-color);
+            transition: border-color 0.5s ease-in-out;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .q-systemic {
+            grid-column: 1;
+            grid-row: 1;
+            background-color: #fef2f2;
+            position: relative;
+        }
+
+        .q-movement {
+            grid-column: 2;
+            grid-row: 1;
+            background-color: #eff6ff;
+            position: relative;
+        }
+
+        .q-muscular {
+            grid-column: 1;
+            grid-row: 2;
+            background-color: #f0fdf4;
+            position: relative;
+        }
+
+        .q-sensory {
+            grid-column: 2;
+            grid-row: 2;
+            background-color: #fffbeb;
+            position: relative;
+        }
+
+        .quadrant-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--secondary-dark);
+            text-align: center;
+            line-height: 1.2;
+            padding: 5px;
+            white-space: normal;
+        }
+
+        .q-sensory .quadrant-label {
+            line-height: 0.9;
+        }
+
+        .circular-divider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .circular-divider::before,
+        .circular-divider::after {
+            content: '';
+            position: absolute;
+            background-color: var(--border-color);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .circular-divider::before {
+            width: 3px;
+            height: 100%;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+        }
+
+        .circular-divider::after {
+            width: 100%;
+            height: 3px;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            z-index: 5;
+        }
+
+        .controls {
+            grid-column: 1 / 4;
+            grid-row: 4 / 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            padding-top: 30px;
+            margin-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .action-button {
+            padding: 14px 35px;
+            background-color: var(--success-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.15em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5);
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+            text-transform: uppercase;
+        }
+
+        .action-button:hover {
+            background-color: #059669;
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.7);
+        }
+
+        .action-button:active {
+            transform: translateY(1px);
+        }
+
+        .result-display-card {
+            width: 100%;
+            max-width: 320px;
+            padding: 30px 20px;
+            border-radius: 12px;
+            background-color: #ffffff;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-display-card h4 {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+
+        .score-gauge-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px auto;
+        }
+
+        .score-ring {
+            fill: none;
+            stroke-width: 12;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 0.8s ease-in-out;
+        }
+
+        .score-ring.bg { stroke: #e5e7eb; }
+        .score-ring.progress { stroke-linecap: round; }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #1f2937;
+        }
+        
+        .score-detail {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+
+        #nmgd-status-button {
+            display: block;
+            width: 100%;
+            padding: 12px 0;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: 700;
+            border: none;
+            cursor: default;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .status-positive {
+            background-color: var(--warning-yellow);
+            color: white;
+            box-shadow: 0 4px 8px rgba(227, 100, 106, 0.3);
+        }
+
+        .status-negative {
+            background-color: var(--success-green);
+            color: white;
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        @media (max-width: 1100px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                gap: 25px 0;
+            }
+            
+            .symptom-box {
+                width: 95%;
+                max-width: 360px;
+                height: 420px;
+                margin: 0 auto;
+            }
+            
+            .box-systemic { grid-row: 1; grid-column: 1; }
+            .box-movement { grid-row: 2; grid-column: 1; }
+            .chart-container { 
+                grid-row: 3; 
+                grid-column: 1; 
+                width: 300px;
+                height: 300px;
+            }
+            .box-muscular { grid-row: 4; grid-column: 1; } 
+            .box-sensory { grid-row: 5; grid-column: 1; } 
+            
+            .controls { grid-row: 6; grid-column: 1; }
+            
+            #app-banner h1 { font-size: 1.8rem; }
+        }
+
+        .disclaimer {
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            margin-top: 40px;
+            font-size: 1.0em;
+            color: #6b7280;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .patient-center {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: center;  
+    align-items: flex-start;  
+    padding-top: 60px; 
+    min-height: calc(100vh - 180px);
 }
 
-#app-banner {
-    width: 100%;
-    background: linear-gradient(135deg, var(--secondary-dark), var(--primary-blue));
-    color: white;
-    padding: 25px 0;
-    text-align: center;
-    margin-bottom: 40px;
-}
 
-#app-banner h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    font-weight: 800;
-}
 
-#app-banner p {
-    margin-top: 8px;
-    opacity: 0.9;
-}
-
-.main-container {
-    width: 100%;
-    max-width: 1000px;
-    padding: 20px;
-}
-
-.card {
-    background: white;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    border: 1px solid #e5e7eb;
-}
-
-input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 6px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-label {
-    font-weight: 600;
-    margin-top: 15px;
-    display: block;
-}
-
-button {
-    padding: 14px 35px;
-    background-color: var(--primary-blue);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 25px;
-    width: 100%;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-.question {
-    margin-bottom: 25px;
-}
-
-.question p {
-    font-weight: 600;
-}
-
-.question label {
-    font-weight: normal;
-    margin-right: 20px;
-}
-
-.result-box {
-    margin-top: 30px;
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
-    font-size: 1.3em;
-    font-weight: 700;
-    display: none;
-}
-
-.disclaimer {
-    margin-top: 50px;
-    padding: 20px;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #6b7280;
-}
-</style>
+    </style>
 </head>
-
 <body>
-
-<div id="app-banner">
-    <h1>NMphenoscore</h1>
-    <p>Initial screening for Neuromuscular Genetic Disorder (NMGD)</p>
-</div>
-
-<!-- Patient Profile -->
-<div id="patient-profile" class="main-container">
-    <div class="card">
-        <h2 style="text-align:center; color: var(--secondary-dark);">Patient Profile</h2>
-
-        <label>Patient Name</label>
-        <input id="patientName" type="text" placeholder="Full Name">
-
-        <label>Age</label>
-        <input id="patientAge" type="number" placeholder="Age">
-
-        <label>Contact</label>
-        <input id="patientContact" type="tel" placeholder="Contact Number">
-
-        <button onclick="launchTool()">Start Screening</button>
+    <div id="app-banner">
+        <h1>NMphenoscore</h1>
+        <p>Initial screening for Neuromuscular genetic disorder(NMGD)</p>
     </div>
-</div>
 
-<!-- Tool Section -->
-<div id="tool-container" class="main-container" style="display:none;">
-    <div class="card">
+    <div id="patient-profile" class="main-container patient-center">
+        <div style="
+            max-width: 1000px;
+            width: 100%
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 80px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 15px;
+        ">
+            <h2 style="
+                text-align:center;
+                color: var(--secondary-dark);
+                margin-bottom: 40px;
+            ">
+                Patient Profile
+            </h2>
 
-        <h2 style="text-align:center; color: var(--secondary-dark);">
-            NMphenoscore – Screening Questions
-        </h2>
+            <label style="font-weight:600;">Patient Name</label>
+            <input id="patientName" type="text" placeholder="Full name"
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
-        <div id="patient-bar" style="margin-bottom:25px; font-weight:600;"></div>
+            <label style="font-weight:600; margin-top:15px; display:block;">Age</label>
+            <input id="patientAge" type="number" placeholder="Age"
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
-        <!-- QUESTIONS -->
+            <label style="font-weight:600; margin-top:15px; display:block;">Contact</label>
+            <input id="patientContact" type="tel" placeholder="Contact number"
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
-        <div class="question">
-            <p>1. Do you have difficulty walking, running, climbing stairs, or maintaining balance?</p>
-            <label><input type="radio" name="q1" value="yes"> Yes</label>
-            <label><input type="radio" name="q1" value="no"> No</label>
+            <button class="action-button" style="width:100%; margin-top:25px;"
+                onclick="launchTool()">
+                Launch Tool
+            </button>
         </div>
-
-        <div class="question">
-            <p>2. Do you have trouble rising from the floor or getting up from a chair?</p>
-            <label><input type="radio" name="q2" value="yes"> Yes</label>
-            <label><input type="radio" name="q2" value="no"> No</label>
-        </div>
-
-        <div class="question">
-            <p>3. Do you feel muscle weakness, stiffness, wasting, or involuntary muscle movements?</p>
-            <label><input type="radio" name="q3" value="yes"> Yes</label>
-            <label><input type="radio" name="q3" value="no"> No</label>
-        </div>
-
-        <div class="question">
-            <p>4. Do muscle problems interfere with daily activities or swallowing/chewing?</p>
-            <label><input type="radio" name="q4" value="yes"> Yes</label>
-            <label><input type="radio" name="q4" value="no"> No</label>
-        </div>
-
-        <div class="question">
-            <p>5. Have you experienced breathing problems, fainting, chest pain, or symptoms with exertion?</p>
-            <label><input type="radio" name="q5" value="yes"> Yes</label>
-            <label><input type="radio" name="q5" value="no"> No</label>
-        </div>
-
-        <div class="question">
-            <p>6. Do you have persistent joint pain, tingling, or difficulty with hearing, speech, or vision?</p>
-            <label><input type="radio" name="q6" value="yes"> Yes</label>
-            <label><input type="radio" name="q6" value="no"> No</label>
-        </div>
-
-        <div class="question">
-            <p>7. Do you have digestive problems, bladder issues, or significant sleep disturbances?</p>
-            <label><input type="radio" name="q7" value="yes"> Yes</label>
-            <label><input type="radio" name="q7" value="no"> No</label>
-        </div>
-
-        <button onclick="calculateResult()">Submit</button>
-
-        <div id="resultBox" class="result-box"></div>
-
     </div>
-</div>
 
-<div class="disclaimer">
-    Disclaimer: This tool is for informational purposes only and should not replace professional medical advice.
-</div>
+    <div class="main-container" id="tool-container" style="display:none;">
+        <div id="patient-bar" style="
+            background:#ffffff;
+            padding:15px 25px;
+            margin-bottom:25px;
+            border-radius:12px;
+            box-shadow:0 4px 10px rgba(0,0,0,0.08);
+            font-weight:600;
+        ">
+            Patient: <span id="pName"></span> |
+            Age: <span id="pAge"></span> |
+            Contact: <span id="pContact"></span>
+        </div>
+        
+        <div class="main-layout">
+            <div class="symptom-box box-systemic">
+                <h3>Systemic</h3>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s1"><label for="s1">Breathing difficulties</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s2"><label for="s2">Cardiac symptoms (dizziness, syncope, chest pain, orthopnea, cardiac complaints with exertion)</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s3"><label for="s3">Dizziness/headache</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s4"><label for="s4">Gastrointestinal dysfunction</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s5"><label for="s5">Sleep disturbance</label></li>
+                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s6"><label for="s6">Urinary dysfunctions</label></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="symptom-box box-movement">
+                <h3>Movement</h3>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m1"><label for="m1">Difficulty in walking/running/jumping/climbing stairs/maintaining body balance</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m2"><label for="m2">Difficulty in transitions from the floor to standing / unable to rise from chair</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m3"><label for="m3">Difficulty in daily activities (dressing, lifting things, reaching overhead)</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m4"><label for="m4">Difficulty in swallowing/chewing/feeding</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m5"><label for="m5">Toe walking</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m6"><label for="m6">Abnormal gait</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m7"><label for="m7">Non-ambulatory</label></li>
+                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m8"><label for="m8">Frequent falls</label></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="chart-container" id="chart-container">
+                <div class="q-systemic"><div class="quadrant-label">Systemic</div></div>
+                <div class="q-movement"><div class="quadrant-label">Movement</div></div>
+                <div class="q-muscular"><div class="quadrant-label">Muscular</div></div>
+                <div class="q-sensory"><div class="quadrant-label">Sensory &<br>Behavioral</div></div>
+                <div class="circular-divider"></div>
+            </div>
+            
+            <div class="symptom-box box-muscular">
+                <h3>Muscular</h3>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu1"><label for="mu1">Involuntary muscle contractions</label></li>
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu2"><label for="mu2">Muscle stiffness</label></li>
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu3"><label for="mu3">Muscle weakness</label></li>
+                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu4"><label for="mu4">Muscle wasting</label></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="symptom-box box-sensory">
+                <h3>Sensory & Behavioral</h3>
+                <div class="symptom-list-container">
+                    <ul class="symptom-list">
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb1"><label for="sb1">Pain</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb2"><label for="sb2">Joint pain and/or swollen joints</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb3"><label for="sb3">Tingling</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb4"><label for="sb4">Behavioral or cognitive impairment</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb5"><label for="sb5">Sensory impairment (hearing/speech/vision)</label></li>
+                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb6"><label for="sb6">Loss of head control</label></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="calculate-button" class="action-button">CALCULATE</button>
+                
+                <div id="result-card" class="result-display-card">
+                    <h4>Assessment Score</h4>
+                    <div class="score-gauge-container">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="score-ring bg" cx="60" cy="60" r="54"></circle>
+                            <circle id="score-ring-progress" class="score-ring progress" cx="60" cy="60" r="54"></circle>
+                        </svg>
+                        <div id="score-text" class="score-text">0.0%</div>
+                    </div>
+                    <div id="score-detail" class="score-detail">Symptoms selected: 0 out of 24</div>
+                    <button id="nmgd-status-button">Likely NMGD Negative</button>
+                </div>
 
-<script>
+                <button id="go-to-step2-button" class="action-button" style="background-color: var(--primary-blue);">
+                    Click here to know the specific condition of NMGD
+                </button>
+            </div>
+        </div>
+    </div>
 
-function launchTool() {
-    const name = document.getElementById("patientName").value.trim();
-    const age = document.getElementById("patientAge").value.trim();
-    const contact = document.getElementById("patientContact").value.trim();
+    <div class="disclaimer">
+        <p>Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.</p>
+    </div>
 
-    if (!name || !age || !contact) {
-        alert("Please fill all patient details.");
-        return;
-    }
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const calculateButton = document.getElementById('calculate-button');
+            const statusButton = document.getElementById('nmgd-status-button');
+            const scoreText = document.getElementById('score-text');
+            const scoreDetail = document.getElementById('score-detail');
+            const progressRing = document.getElementById('score-ring-progress');
+            const chartContainer = document.getElementById('chart-container');
+            
+            const RADIUS = 54;
+            const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+            progressRing.style.strokeDasharray = CIRCUMFERENCE;
 
-    document.getElementById("patient-profile").style.display = "none";
-    document.getElementById("tool-container").style.display = "block";
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-score="1"]');
+            const TOTAL_SYMPTOMS = checkboxes.length;
+            const THRESHOLD_PERCENTAGE = 30;
 
-    document.getElementById("patient-bar").innerHTML =
-        "Patient: " + name + " | Age: " + age + " | Contact: " + contact;
-}
+            const updateScore = () => {
+                let totalScore = 0;
+                
+                checkboxes.forEach(checkbox => {
+                    const listItem = checkbox.closest('li');
+                    
+                    if (checkbox.checked) {
+                        totalScore += 1;
+                        if (listItem) {
+                            listItem.classList.add('symptom-selected');
+                            const category = checkbox.dataset.category;
+                            listItem.classList.add(category);
+                        }
+                    } else {
+                        if (listItem) {
+                            listItem.classList.remove('symptom-selected', 'systemic', 'movement', 'muscular', 'sensory');
+                        }
+                    }
+                });
 
-function calculateResult() {
+                const percentageScore = (totalScore / TOTAL_SYMPTOMS) * 100;
+                const roundedPercentage = percentageScore.toFixed(1);
+                const isPositive = percentageScore >= THRESHOLD_PERCENTAGE;
 
-    const questions = ["q1","q2","q3","q4","q5","q6","q7"];
-    let anyYes = false;
+                const offset = CIRCUMFERENCE * (1 - percentageScore / 100);
+                progressRing.style.strokeDashoffset = offset;
+                
+                let progressColor;
+                if (percentageScore === 0) {
+                    progressColor = '#e5e7eb';
+                } else if (isPositive) {
+                    progressColor = 'var(--warning-yellow)';
+                } else {
+                    progressColor = 'var(--success-green)';
+                }
+                progressRing.style.stroke = progressColor;
 
-    for (let q of questions) {
-        const selected = document.querySelector(`input[name="${q}"]:checked`);
-        if (!selected) {
-            alert("Please answer all questions.");
-            return;
+                scoreText.textContent = `${roundedPercentage}%`;
+                scoreDetail.textContent = `Symptoms selected: ${totalScore} out of ${TOTAL_SYMPTOMS}`;
+                    
+                const statusText = isPositive ? "Likely NMGD Positive" : "Likely NMGD Negative";
+                statusButton.textContent = statusText;
+                
+                statusButton.classList.remove('status-positive', 'status-negative');
+                statusButton.classList.add(isPositive ? 'status-positive' : 'status-negative');
+
+                chartContainer.style.borderColor = isPositive ? 'var(--warning-yellow)' : 'var(--success-green)';
+
+                // Save results
+                localStorage.setItem("step1Score", roundedPercentage + "%");
+                localStorage.setItem("step1Status", statusText);
+                localStorage.setItem("step1TotalSymptoms", TOTAL_SYMPTOMS);
+                localStorage.setItem("step1SelectedCount", totalScore);
+
+                const selectedSymptoms = [];
+                checkboxes.forEach(cb => {
+                    if (cb.checked) {
+                        const label = cb.nextElementSibling?.textContent?.trim();
+                        if (label) selectedSymptoms.push(label);
+                    }
+                });
+                localStorage.setItem("step1Symptoms", JSON.stringify(selectedSymptoms));
+            };
+
+            checkboxes.forEach(checkbox => {
+                const listItem = checkbox.closest('li');
+                if (listItem) {
+                    listItem.addEventListener('click', (event) => {
+                        if (event.target !== checkbox && event.target.tagName !== 'LABEL') {
+                            checkbox.checked = !checkbox.checked;
+                        }
+                    });
+                }
+            });
+            
+            calculateButton.addEventListener('click', updateScore);
+            updateScore();
+            chartContainer.style.borderColor = 'var(--border-color)';
+        });
+
+        document.getElementById('go-to-step2-button').addEventListener('click', () => {
+            window.location.href = 'step2.html';
+        });
+
+        function launchTool() {
+            const name = document.getElementById("patientName").value.trim();
+            const age = document.getElementById("patientAge").value.trim();
+            const contact = document.getElementById("patientContact").value.trim();
+
+            if (!name || !age || !contact) {
+                alert("Please fill all patient details.");
+                return;
+            }
+
+            localStorage.setItem("patientName", name);
+            localStorage.setItem("patientAge", age);
+            localStorage.setItem("patientContact", contact);
+
+            showTool();
         }
-        if (selected.value === "yes") {
-            anyYes = true;
+
+        function showTool() {
+            const name = localStorage.getItem("patientName");
+            const age = localStorage.getItem("patientAge");
+            const contact = localStorage.getItem("patientContact");
+
+            if (!name || !age || !contact) return;
+
+            document.getElementById("patient-profile").style.display = "none";
+            document.getElementById("tool-container").style.display = "block";
+
+            document.getElementById("pName").textContent = name;
+            document.getElementById("pAge").textContent = age;
+            document.getElementById("pContact").textContent = contact;
         }
-    }
-
-    const resultBox = document.getElementById("resultBox");
-    resultBox.style.display = "block";
-
-    if (anyYes) {
-        resultBox.style.backgroundColor = "#fee2e2";
-        resultBox.style.color = "#991b1b";
-        resultBox.textContent = "Likely NMGD Positive";
-    } else {
-        resultBox.style.backgroundColor = "#d1fae5";
-        resultBox.style.color = "#065f46";
-        resultBox.textContent = "Likely NMGD Negative";
-    }
-}
-
-</script>
-
+    </script>
 </body>
 </html>
