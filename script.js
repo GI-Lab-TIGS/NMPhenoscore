@@ -745,7 +745,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("Report Date:", 120, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(new Date().toLocaleDateString('en-GB'), 155, y);
-  y += 25;
+  y += 15;
 
   // SECTION 1: INITIAL SCREENING
   pdf.setFontSize(13);
