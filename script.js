@@ -489,7 +489,7 @@ analyzeBtn.addEventListener('click', async () => {
                             <tr><th>Symptom</th><th>HPO ID</th></tr>
                             ${hpoTerms.map(r => `<tr><td>${r.Symptom}</td><td>${r.HPO_ID}</td></tr>`).join('')}
                         </table>
-                        <button id="downloadHpoBtn" class="download-btn">📥 Download HPO Excel</button>
+                        <button id="downloadHpoBtn" class="download-btn">Download HPO Excel</button>
                     </div>
                 `;
                 resultsDiv.querySelector('.results-content').insertAdjacentHTML('beforeend', hpoHtml);
@@ -667,7 +667,7 @@ function fileToDataURL(file) {
   });
 }
 
-// Generate final PDF report 
+// ============ Generate final PDF report ============== 
 async function generateFinalNMPhenoscorePDF() {
   console.log("=== STARTING PDF GENERATION ===");
   
@@ -685,9 +685,25 @@ async function generateFinalNMPhenoscorePDF() {
   const patientName = localStorage.getItem("patientName") || "N/A";
   const patientAge = localStorage.getItem("patientAge") || "N/A";
   const patientContact = localStorage.getItem("patientContact") || "N/A";
-  const score = localStorage.getItem("step1Score") || "0%";
+  const guardian = localStorage.getItem("guardianName") || "N/A";
+  const guardiancontact = localStorage.getItem("guardianContact") || "N/A";
+  const clinician = localStorage.getItem("clinicianName") || "N/A";
+  const cliniciancontact = localStorage.getItem("clinicianContact") || "N/A";
+  const clinic = localStorage.getItem("clinicName") || "N/A";
+  //const score = localStorage.getItem("step1Score") || "0%";
+  //const status = localStorage.getItem("step1Status") || "N/A";
+  //const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
   const status = localStorage.getItem("step1Status") || "N/A";
-  const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
+  const step1Items = [
+    "Difficulty walking, running, climbing stairs,maintaining balance",
+    "Trouble rising from the floor, getting up from a chair",
+    "Muscle weakness, stiffness, wasting, involuntary muscle movements",
+    "Muscle problems affecting daily activities (dressing, lifting, reaching), swallowing/chewing",
+    "Breathing problems, fainting, chest pain, exertion symptoms",
+    "Joint pain, tingling, difficulty with hearing, speech, vision",
+    "Digestive problems, bladder/urinary issues, significant sleep disturbances"
+  ];
+  const step1Answers = JSON.parse(localStorage.getItem("step1Answers") || "[]");
   const topCondition = localStorage.getItem("step2TopCondition") || "N/A";
   const matchedSymptoms = JSON.parse(localStorage.getItem("step2MatchedSymptoms") || "[]");
   const otherConditions = JSON.parse(localStorage.getItem("step2OtherConditions") || "[]");
@@ -740,6 +756,33 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("Contact:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(patientContact, 60, y);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Guardian:", 25, y);
+  pdf.setFont(undefined, 'bold');
+  pdf.text(guardian, 60, y);
+  y += 7;
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Gurdian Contact:", 25, y);
+  pdf.setFont(undefined, 'bold');
+  pdf.text(guardiancontact, 60, y);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Clinician:", 25, y);
+  pdf.setFont(undefined, 'bold');
+  pdf.text(clinician, 60, y);
+  y +=7;
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Clinician Contact:", 25, y);
+  pdf.setFont(undefined, 'bold');
+  pdf.text(cliniciancontact, 60, y);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Clinic Name:", 25, y);
+  pdf.setFont(undefined, 'bold');
+  pdf.text(clinic, 60, y);
   
   pdf.setFont(undefined, 'bold');
   pdf.text("Report Date:", 120, y);
@@ -748,39 +791,34 @@ async function generateFinalNMPhenoscorePDF() {
   y += 25;
 
   // SECTION 1: INITIAL SCREENING
-  pdf.setFontSize(13);
-  pdf.setFont(undefined, 'bold');
-  pdf.setTextColor(43, 140, 238);
-  pdf.text("1. INITIAL SCREENING FOR NMGD", 20, y);
-  y += 8;
-  
-  pdf.setFontSize(10);
-  pdf.setTextColor(0, 0, 0);
-  
-  pdf.setFillColor(245, 245, 245);
-  pdf.rect(25, y, 80, 18, 'F');
-  pdf.setFont(undefined, 'bold');
-  pdf.text("Assessment Result:", 30, y + 6);
-  pdf.setFont(undefined, 'normal');
-  const resultColor = status.includes('Positive') ? [220, 38, 38] : [34, 197, 94];
-  pdf.setTextColor(...resultColor);
-  pdf.text(status, 30, y + 13);
-  
-  pdf.setFontSize(10);
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFillColor(240, 248, 255);
-  pdf.rect(110, y, 80, 18, 'F');
-  pdf.setFont(undefined, 'bold');
-  pdf.text("Assessment Score:", 115, y + 6);
   pdf.setFontSize(14);
-  pdf.setTextColor(43, 140, 238);
-  pdf.text(score, 115, y + 13);
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFontSize(10);
-  y += 25;
+  pdf.setFont(undefined, "bold");
+  pdf.text("Step 1: Initial NMGD Screening", 15, y);
+  y += 8;
+  pdf.setFontSize(11);
+  pdf.setFont(undefined, "normal");
+  let yesFound = false;
+  step1Items.forEach((item, i) => {
+    if (step1Answers[i] === "yes") {
+      pdf.text(`• ${item}`, 15, y);
+      y += 7;
+      yesFound = true;
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+    }
+  });
+  if (!yesFound) {
+    pdf.text("No symptoms reported in initial screening.", 15, y);
+    y += 7;
+  }
+  pdf.setFont(undefined, "bold");
+  pdf.text(`Screening Result: ${status}`, 15, y);
+  y += 10;
 
   // Clinical presentation
-  if (step1Symptoms.length > 0) {
+  /*if (step1Symptoms.length > 0) {
     pdf.setFont(undefined, 'bold');
     pdf.text(`Clinical Presentation (${step1Symptoms.length} symptoms identified):`, 25, y);
     y += 6;
@@ -808,7 +846,7 @@ async function generateFinalNMPhenoscorePDF() {
     });
     
     y = Math.max(leftY, rightY) + 5;
-  }
+  }*/
 
   // SECTION 2: DIFFERENTIAL DIAGNOSIS
   if (y > 250) { pdf.addPage(); y = 20; }
