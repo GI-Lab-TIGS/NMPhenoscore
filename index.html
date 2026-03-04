@@ -739,14 +739,21 @@
             statusButton.classList.remove('status-positive', 'status-negative');
             statusButton.classList.add(isPositive ? 'status-positive' : 'status-negative');
 
-            /* Show clinical recommendation button only if positive */
             noteButton.style.display = isPositive ? "block" : "none";
+
+            // SAVE ANSWERS
+            const answers = [];
+            for (let i = 1; i <= 7; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                answers.push(selected ? selected.value : "no");
+            }
+
+            localStorage.setItem("step1Answers", JSON.stringify(answers));
 
             // Save result
             localStorage.setItem("step1Status", statusText);
             localStorage.setItem("step1YesCount", yesAnswers.length);
         }
-
         calculateButton.addEventListener('click', updateResult);
 
         goToStep2Button.addEventListener('click', () => {
@@ -811,4 +818,3 @@
 </script>
 </body>
 </html>
-
