@@ -64,13 +64,11 @@
         }
 
         .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 500px 1fr; 
-            grid-template-rows: auto auto auto;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-items: center;
-            gap: 20px 0;
             width: 100%;
+            gap: 20px;
         }
 
         .symptom-box {
@@ -326,7 +324,7 @@
             align-items: center;
             gap: 20px;
             width: 100%;
-            padding-top: 30px;
+            /*padding-top: 30px;*/
             margin-top: 20px;
             border-top: 2px solid #e5e7eb;
         }
@@ -357,7 +355,9 @@
         .result-display-card {
             width: 100%;
             max-width: 320px;
-            padding: 30px 20px;
+            padding-bottom: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
             border-radius: 12px;
             background-color: #ffffff;
             text-align: center;
@@ -471,14 +471,63 @@
             border-top: 1px solid #e5e7eb;
         }
         .patient-center {
-    display: flex;
-    justify-content: center;  
-    align-items: flex-start;  
-    padding-top: 60px; 
-    min-height: calc(100vh - 180px);
-}
+            display: flex;
+            justify-content: center;  
+            align-items: flex-start;  
+            padding-top: 60px; 
+            min-height: calc(100vh - 180px);
+        }
+        .question-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 30px;
+            margin-bottom: 18px;
+        }
 
+        .question-row span {
+            flex: 1;
+            min-width: 0;
+        }
 
+        .question-options {
+            display: flex;
+            gap: 20px;
+            white-space: nowrap;
+        }
+        .question-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 15px;
+            background: #ffffff;
+            padding-left: 20px;
+            padding-bottom: 20px;
+            padding-top: 5px;
+        }
+
+        .question-card {
+            background: #e8f0faa2;
+            padding: 20px;
+            border-radius: 12px;
+            /*box-shadow: 0 6px 15px rgba(0,0,0,0.05);*/
+            border: 1px solid #e8f0faa2;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .question-card p {
+            margin: 0 0 15px 0;
+            font-weight: 550;
+            line-height: 1.5;
+        }
+
+        .question-options {
+            display: flex;
+            justify-content: center;
+            gap: 120px;
+            font-weight: 550;
+        }
 
     </style>
 </head>
@@ -491,7 +540,7 @@
     <div id="patient-profile" class="main-container patient-center">
         <div style="
             max-width: 1000px;
-            width: 100%
+            width: 40%;
             margin: 0 auto;
             background: #ffffff;
             padding: 80px;
@@ -521,6 +570,26 @@
             <input id="patientContact" type="tel" placeholder="Contact number"
                 style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
+             <label style="font-weight:600; margin-top:15px; display:block;">Guardian</label>
+            <input id="guardianName" type="text" placeholder="Guardian name" 
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
+            <label style="font-weight:600; margin-top:15px; display:block;">Guardian Contact</label>
+            <input id="guardianContact" type="tel" placeholder="Guardian number" 
+                style="width:100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+            
+            <label style="font-weight:600; margin-top:15px; display:block;">Clinician</label>
+            <input id="clinicianName" type="text" placeholder="Clinician name"
+                style="width: 100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
+            <label style="font-weight:600; margin-top:15px; display:block;">Contact(clinician)</label>
+            <input id="clinicianContact" type="tel" placeholder="Clinician number"
+                style="width: 100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
+            <label style="font-weight:600; margin-top:15px; display:block;">Clinic Name</label>
+            <input id="clinicName" type="text" placeholder="Clinic name"
+                style="width: 100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
             <button class="action-button" style="width:100%; margin-top:25px;"
                 onclick="launchTool()">
                 Launch Tool
@@ -528,245 +597,216 @@
         </div>
     </div>
 
-    <div class="main-container" id="tool-container" style="display:none;">
-        <div id="patient-bar" style="
-            background:#ffffff;
-            padding:15px 25px;
-            margin-bottom:25px;
-            border-radius:12px;
-            box-shadow:0 4px 10px rgba(0,0,0,0.08);
-            font-weight:600;
-        ">
-            Patient: <span id="pName"></span> |
-            Age: <span id="pAge"></span> |
-            Contact: <span id="pContact"></span>
-        </div>
-        
-        <div class="main-layout">
-            <div class="symptom-box box-systemic">
-                <h3>Systemic</h3>
-                <div class="symptom-list-container">
-                    <ul class="symptom-list">
-                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s1"><label for="s1">Breathing difficulties</label></li>
-                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s2"><label for="s2">Cardiac symptoms (dizziness, syncope, chest pain, orthopnea, cardiac complaints with exertion)</label></li>
-                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s3"><label for="s3">Dizziness/headache</label></li>
-                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s4"><label for="s4">Gastrointestinal dysfunction</label></li>
-                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s5"><label for="s5">Sleep disturbance</label></li>
-                        <li class="systemic"><input type="checkbox" data-score="1" data-category="systemic" id="s6"><label for="s6">Urinary dysfunctions</label></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="symptom-box box-movement">
-                <h3>Movement</h3>
-                <div class="symptom-list-container">
-                    <ul class="symptom-list">
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m1"><label for="m1">Difficulty in walking/running/jumping/climbing stairs/maintaining body balance</label></li>
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m2"><label for="m2">Difficulty in transitions from the floor to standing / unable to rise from chair</label></li>
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m3"><label for="m3">Difficulty in daily activities (dressing, lifting things, reaching overhead)</label></li>
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m4"><label for="m4">Difficulty in swallowing/chewing/feeding</label></li>
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m5"><label for="m5">Toe walking</label></li>
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m6"><label for="m6">Abnormal gait</label></li>
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m7"><label for="m7">Non-ambulatory</label></li>
-                        <li class="movement"><input type="checkbox" data-score="1" data-category="movement" id="m8"><label for="m8">Frequent falls</label></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="chart-container" id="chart-container">
-                <div class="q-systemic"><div class="quadrant-label">Systemic</div></div>
-                <div class="q-movement"><div class="quadrant-label">Movement</div></div>
-                <div class="q-muscular"><div class="quadrant-label">Muscular</div></div>
-                <div class="q-sensory"><div class="quadrant-label">Sensory &<br>Behavioral</div></div>
-                <div class="circular-divider"></div>
-            </div>
-            
-            <div class="symptom-box box-muscular">
-                <h3>Muscular</h3>
-                <div class="symptom-list-container">
-                    <ul class="symptom-list">
-                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu1"><label for="mu1">Involuntary muscle contractions</label></li>
-                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu2"><label for="mu2">Muscle stiffness</label></li>
-                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu3"><label for="mu3">Muscle weakness</label></li>
-                        <li class="muscular"><input type="checkbox" data-score="1" data-category="muscular" id="mu4"><label for="mu4">Muscle wasting</label></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="symptom-box box-sensory">
-                <h3>Sensory & Behavioral</h3>
-                <div class="symptom-list-container">
-                    <ul class="symptom-list">
-                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb1"><label for="sb1">Pain</label></li>
-                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb2"><label for="sb2">Joint pain and/or swollen joints</label></li>
-                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb3"><label for="sb3">Tingling</label></li>
-                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb4"><label for="sb4">Behavioral or cognitive impairment</label></li>
-                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb5"><label for="sb5">Sensory impairment (hearing/speech/vision)</label></li>
-                        <li class="sensory"><input type="checkbox" data-score="1" data-category="sensory" id="sb6"><label for="sb6">Loss of head control</label></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="controls">
-                <button id="calculate-button" class="action-button">CALCULATE</button>
-                
-                <div id="result-card" class="result-display-card">
-                    <h4>Assessment Score</h4>
-                    <div class="score-gauge-container">
-                        <svg viewBox="0 0 120 120">
-                            <circle class="score-ring bg" cx="60" cy="60" r="54"></circle>
-                            <circle id="score-ring-progress" class="score-ring progress" cx="60" cy="60" r="54"></circle>
-                        </svg>
-                        <div id="score-text" class="score-text">0.0%</div>
+    <div class="main-layout">
+        <div class="main-layout" style="grid-template-columns: 1fr;">
+
+        <!-- QUESTIONS CARD -->
+        <div class="question-cards" 
+            style="width: 100%; max-width: 1000px; height: auto; margin: 0 auto;">
+
+            <!--<h3>NMGD Screening Questions</h3>-->
+            <div class="question-cards" style="width:100%; max-width:950px; height:auto;">
+
+                <!-- Question 1 -->
+                <div class="question-card">
+                    <p>1. Do you have difficulty walking, running, climbing stairs, or maintaining balance?</p>
+                    <div class="question-options">
+                        <label><input type="radio" name="q1" value="yes" class="nmgd-question"> Yes</label>
+                        <label><input type="radio" name="q1" value="no"> No</label>
                     </div>
-                    <div id="score-detail" class="score-detail">Symptoms selected: 0 out of 24</div>
-                    <button id="nmgd-status-button">Likely NMGD Negative</button>
                 </div>
 
-                <button id="go-to-step2-button" class="action-button" style="background-color: var(--primary-blue);">
-                    Click here to know the specific condition of NMGD
-                </button>
+                <!-- Question 2 -->
+                <div class="question-card">
+                    <p>2. Do you have trouble rising from the floor or getting up from a chair?</p>
+                    <div class="question-options">
+                        <label><input type="radio" name="q2" value="yes" class="nmgd-question"> Yes</label>
+                        <label><input type="radio" name="q2" value="no"> No</label>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="question-card">
+                    <p>3. Do you feel muscle weakness, stiffness, wasting, or involuntary muscle movements?</p>
+                    <div class="question-options">
+                        <label><input type="radio" name="q3" value="yes" class="nmgd-question"> Yes</label>
+                        <label><input type="radio" name="q3" value="no"> No</label>
+                    </div>
+                </div>
+
+                <!-- Question 4 -->
+                <div class="question-card">
+                    <p>4. Do muscle problems interfere with daily activities (dressing, lifting, reaching) or swallowing/chewing?</p>
+                    <div class="question-options">
+                        <label><input type="radio" name="q4" value="yes" class="nmgd-question"> Yes</label>
+                        <label><input type="radio" name="q4" value="no"> No</label>
+                    </div>
+                </div>
+
+                <!-- Question 5 -->
+                <div class="question-card">
+                    <p>5. Have you experienced breathing problems, fainting, chest pain, or symptoms with exertion?</p>
+                    <div class="question-options">
+                        <label><input type="radio" name="q5" value="yes" class="nmgd-question"> Yes</label>
+                        <label><input type="radio" name="q5" value="no"> No</label>
+                    </div>
+                </div>
+
+                <!-- Question 6 -->
+                <div class="question-card">
+                    <p>6. Do you have persistent joint pain, tingling, or difficulty with hearing, speech, or vision?</p>
+                    <div class="question-options">
+                        <label><input type="radio" name="q6" value="yes" class="nmgd-question"> Yes</label>
+                        <label><input type="radio" name="q6" value="no"> No</label>
+                    </div>
+                </div>
+
+                <!-- Question 7 -->
+                <div class="question-card">
+                    <p>7. Do you have digestive problems, bladder/urinary issues, or significant sleep disturbances?</p>
+                    <div class="question-options">
+                        <label><input type="radio" name="q7" value="yes" class="nmgd-question"> Yes</label>
+                        <label><input type="radio" name="q7" value="no"> No</label>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="disclaimer">
-        <p>Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.</p>
+        <!-- CONTROLS -->
+        <div class="controls" style="margin-top:40px;">
+
+            <button id="calculate-button" class="action-button">
+                Analyse
+            </button>
+
+            <div id="result-card" class="result-display-card" style="margin-top:15px;">
+            <h4>Assessment Result</h4>
+
+            <button id="nmgd-status-button" class="status-negative">
+                Likely NMGD Negative
+            </button>
+            </div>
+            <button id="clinical-note-button"
+                style="
+                display:none;
+                margin-top:12px;
+                width:20%;
+                padding: 12px;
+                border:none;
+                border-radius:6px;
+                background:#eba422;
+                color:rgb(10, 10, 10);
+                font-weight:600;
+                cursor:default;
+                font-size: medium;
+                ">
+                Further clinical evaluation for NMGD is recommended
+            </button>
+
+            <button id="go-to-step2-button" class="action-button"
+                    style="background-color: var(--primary-blue); margin-top:25px;">
+                Click here to know the specific condition of NMGD
+            </button>
+
+        </div>
+
     </div>
+    <div class="disclaimer" style="margin-top:80px;">
+    <p>Disclaimer: This tool is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.</p>
+</div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const calculateButton = document.getElementById('calculate-button');
-            const statusButton = document.getElementById('nmgd-status-button');
-            const scoreText = document.getElementById('score-text');
-            const scoreDetail = document.getElementById('score-detail');
-            const progressRing = document.getElementById('score-ring-progress');
-            const chartContainer = document.getElementById('chart-container');
-            
-            const RADIUS = 54;
-            const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-            progressRing.style.strokeDasharray = CIRCUMFERENCE;
+    document.addEventListener('DOMContentLoaded', () => {
 
-            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-score="1"]');
-            const TOTAL_SYMPTOMS = checkboxes.length;
-            const THRESHOLD_PERCENTAGE = 30;
+        const calculateButton = document.getElementById('calculate-button');
+        const statusButton = document.getElementById('nmgd-status-button');
+        const noteButton = document.getElementById('clinical-note-button');
+        const goToStep2Button = document.getElementById('go-to-step2-button');
 
-            const updateScore = () => {
-                let totalScore = 0;
-                
-                checkboxes.forEach(checkbox => {
-                    const listItem = checkbox.closest('li');
-                    
-                    if (checkbox.checked) {
-                        totalScore += 1;
-                        if (listItem) {
-                            listItem.classList.add('symptom-selected');
-                            const category = checkbox.dataset.category;
-                            listItem.classList.add(category);
-                        }
-                    } else {
-                        if (listItem) {
-                            listItem.classList.remove('symptom-selected', 'systemic', 'movement', 'muscular', 'sensory');
-                        }
-                    }
-                });
+        function updateResult() {
+            const yesAnswers = document.querySelectorAll('.nmgd-question:checked');
+            const clinicalNote = document.getElementById("clinical-note-button");
 
-                const percentageScore = (totalScore / TOTAL_SYMPTOMS) * 100;
-                const roundedPercentage = percentageScore.toFixed(1);
-                const isPositive = percentageScore >= THRESHOLD_PERCENTAGE;
+            const isPositive = yesAnswers.length >= 1;
 
-                const offset = CIRCUMFERENCE * (1 - percentageScore / 100);
-                progressRing.style.strokeDashoffset = offset;
-                
-                let progressColor;
-                if (percentageScore === 0) {
-                    progressColor = '#e5e7eb';
-                } else if (isPositive) {
-                    progressColor = 'var(--warning-yellow)';
-                } else {
-                    progressColor = 'var(--success-green)';
-                }
-                progressRing.style.stroke = progressColor;
+            const statusText = isPositive 
+                ? "Likely NMGD Positive" 
+                : "Likely NMGD Negative";
 
-                scoreText.textContent = `${roundedPercentage}%`;
-                scoreDetail.textContent = `Symptoms selected: ${totalScore} out of ${TOTAL_SYMPTOMS}`;
-                    
-                const statusText = isPositive ? "Likely NMGD Positive" : "Likely NMGD Negative";
-                statusButton.textContent = statusText;
-                
-                statusButton.classList.remove('status-positive', 'status-negative');
-                statusButton.classList.add(isPositive ? 'status-positive' : 'status-negative');
+            statusButton.textContent = statusText;
 
-                chartContainer.style.borderColor = isPositive ? 'var(--warning-yellow)' : 'var(--success-green)';
+            statusButton.classList.remove('status-positive', 'status-negative');
+            statusButton.classList.add(isPositive ? 'status-positive' : 'status-negative');
 
-                // Save results
-                localStorage.setItem("step1Score", roundedPercentage + "%");
-                localStorage.setItem("step1Status", statusText);
-                localStorage.setItem("step1TotalSymptoms", TOTAL_SYMPTOMS);
-                localStorage.setItem("step1SelectedCount", totalScore);
+            /* Show clinical recommendation button only if positive */
+            noteButton.style.display = isPositive ? "block" : "none";
 
-                const selectedSymptoms = [];
-                checkboxes.forEach(cb => {
-                    if (cb.checked) {
-                        const label = cb.nextElementSibling?.textContent?.trim();
-                        if (label) selectedSymptoms.push(label);
-                    }
-                });
-                localStorage.setItem("step1Symptoms", JSON.stringify(selectedSymptoms));
-            };
-
-            checkboxes.forEach(checkbox => {
-                const listItem = checkbox.closest('li');
-                if (listItem) {
-                    listItem.addEventListener('click', (event) => {
-                        if (event.target !== checkbox && event.target.tagName !== 'LABEL') {
-                            checkbox.checked = !checkbox.checked;
-                        }
-                    });
-                }
-            });
-            
-            calculateButton.addEventListener('click', updateScore);
-            updateScore();
-            chartContainer.style.borderColor = 'var(--border-color)';
-        });
-
-        document.getElementById('go-to-step2-button').addEventListener('click', () => {
-            window.location.href = 'step2.html';
-        });
-
-        function launchTool() {
-            const name = document.getElementById("patientName").value.trim();
-            const age = document.getElementById("patientAge").value.trim();
-            const contact = document.getElementById("patientContact").value.trim();
-
-            if (!name || !age || !contact) {
-                alert("Please fill all patient details.");
-                return;
-            }
-
-            localStorage.setItem("patientName", name);
-            localStorage.setItem("patientAge", age);
-            localStorage.setItem("patientContact", contact);
-
-            showTool();
+            // Save result
+            localStorage.setItem("step1Status", statusText);
+            localStorage.setItem("step1YesCount", yesAnswers.length);
         }
 
-        function showTool() {
-            const name = localStorage.getItem("patientName");
-            const age = localStorage.getItem("patientAge");
-            const contact = localStorage.getItem("patientContact");
+        calculateButton.addEventListener('click', updateResult);
 
-            if (!name || !age || !contact) return;
+        goToStep2Button.addEventListener('click', () => {
+            window.location.href = "step2.html";
+        });
 
-            document.getElementById("patient-profile").style.display = "none";
-            document.getElementById("tool-container").style.display = "block";
+    });
 
-            document.getElementById("pName").textContent = name;
-            document.getElementById("pAge").textContent = age;
-            document.getElementById("pContact").textContent = contact;
+    /* -------- PATIENT PROFILE FUNCTIONS -------- */
+
+    function launchTool() {
+        const name = document.getElementById("patientName").value.trim();
+        const age = document.getElementById("patientAge").value.trim();
+        const contact = document.getElementById("patientContact").value.trim();
+        const guardian = document.getElementById("guardianName").value.trim();
+        const guardiancontact = document.getElementById("guardianContact").value.trim();
+        const clinician = document.getElementById("clinicianName").value.trim();
+        const cliniciancontact = document.getElementById("clinicianContact").value.trim();
+        const clinic = document.getElementById("clinicName").value.trim();
+
+        if (!name || !age || !contact || !guardian || !guardiancontact || !clinician || !cliniciancontact || !clinic) {
+            alert("Please fill all patient details.");
+            return;
         }
-    </script>
+
+        localStorage.setItem("patientName", name);
+        localStorage.setItem("patientAge", age);
+        localStorage.setItem("patientContact", contact);
+        localStorage.setItem("guardianName", guardian);
+        localStorage.setItem("guardianContact", guardiancontact);
+        localStorage.setItem("clinicianName", clinician);
+        localStorage.setItem("clinicianContact", cliniciancontact);
+        localStorage.setItem("clinicName", clinic);
+
+        showTool();
+    }
+
+    function showTool() {
+        const name = localStorage.getItem("patientName");
+        const age = localStorage.getItem("patientAge");
+        const contact = localStorage.getItem("patientContact");
+        const guardian = localStorage.getItem("guardianName");
+        const guardiancontact = localStorage.getItem("guardianContact");
+        const clinician = localStorage.getItem("clinicianName");
+        const cliniciancontact = localStorage.getItem("clinicianContact");
+        const clinic = localStorage.getItem("clinicName");
+
+        if (!name || !age || !contact || !guardian || !guardiancontact || !clinician || !cliniciancontact || !clinic) return;
+
+        document.getElementById("patient-profile").style.display = "none";
+        document.getElementById("tool-container").style.display = "block";
+
+        document.getElementById("pName").textContent = name;
+        document.getElementById("pAge").textContent = age;
+        document.getElementById("pContact").textContent = contact;
+        document.getElementById("pGuardian").textContent = guardian;
+        document.getElementById("pGuardian Contact").textContent = guardiancontact;
+        document.getElementById("pClinician").textContent = clinician;
+        document.getElementById("pClinician Contact").textContent = cliniciancontact;
+        document.getElementById("pClinic Name").textContent = clinic;
+    }
+</script>
 </body>
 </html>
-
