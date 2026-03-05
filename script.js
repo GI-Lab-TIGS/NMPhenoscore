@@ -794,7 +794,7 @@ async function generateFinalNMPhenoscorePDF() {
   // SECTION 1: INITIAL SCREENING
   pdf.setFontSize(14);
   pdf.setFont(undefined, "bold");
-  pdf.text("Step 1: Initial NMGD Screening", 15, y);
+  pdf.text("1. Initial NMGD Screening", 15, y);
   y += 8;
   pdf.setFontSize(11);
   pdf.setFont(undefined, "normal");
@@ -814,9 +814,20 @@ async function generateFinalNMPhenoscorePDF() {
     pdf.text("No symptoms reported in initial screening.", 15, y);
     y += 7;
   }
+  let boxWidth = 170;
+  let boxHeight = 10;
+
+  if (status.toLowerCase().includes("positive")) {
+    pdf.setFillColor(254, 202, 202); 
+  } else {
+    pdf.setFillColor(22, 163, 74); 
+  }
+  pdf.rect(15, y - 5, boxWidth, boxHeight, "F");
   pdf.setFont(undefined, "bold");
-  pdf.text(`Screening Result: ${status}`, 15, y);
+  pdf.setTextColor(0, 0, 0);
+  pdf.text(`Screening Result: ${status}`, 20, y + 1);
   y += 10;
+  pdf.setTextColor(0, 0, 0);
 
   // Clinical presentation
   /*if (step1Symptoms.length > 0) {
