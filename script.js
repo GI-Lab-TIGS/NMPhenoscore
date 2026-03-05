@@ -730,7 +730,7 @@ async function generateFinalNMPhenoscorePDF() {
 
   // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
-  pdf.rect(20, y, 170, 32, 'F');
+  pdf.rect(20, y, 170, 55, 'F');
   
   pdf.setFontSize(11);
   pdf.setFont(undefined, 'bold');
