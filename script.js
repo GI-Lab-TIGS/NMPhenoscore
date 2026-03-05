@@ -730,7 +730,7 @@ async function generateFinalNMPhenoscorePDF() {
 
   // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
-  pdf.rect(20, y, 170, 45, 'F');
+  pdf.rect(20, y, 170, 55, 'F');
   
   pdf.setFontSize(11);
   pdf.setFont(undefined, 'bold');
@@ -797,38 +797,49 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setTextColor(43, 140, 238);
   pdf.text("1. Initial NMGD Screening", 20, y);
   y += 8;
+
   pdf.setFontSize(11);
   pdf.setFont(undefined, "normal");
+  pdf.setTextColor(0,0,0);
+
   let yesFound = false;
+
   step1Items.forEach((item, i) => {
     if (step1Answers[i] === "yes") {
-      pdf.text(`• ${item}`, 15, y);
-      y += 7;
+      pdf.text(`• ${item}`, 20, y);
+      y += 6;
       yesFound = true;
+
       if (y > 270) {
         pdf.addPage();
         y = 20;
       }
     }
   });
+
   if (!yesFound) {
-    pdf.text("No symptoms reported in initial screening.", 15, y);
-    y += 7;
+    pdf.text("No symptoms reported in initial screening.", 20, y);
+    y += 6;
   }
+  y += 2;
+
   let boxWidth = 170;
-  let boxHeight = 10;
+  let boxHeight = 12;
 
   if (status.toLowerCase().includes("positive")) {
     pdf.setFillColor(254, 202, 202); 
+    pdf.setDrawColor(220, 38, 38);   
   } else {
-    pdf.setFillColor(22, 163, 74); 
+    pdf.setFillColor(220, 252, 231); 
+    pdf.setDrawColor(22, 163, 74);   
   }
-  pdf.rect(15, y - 5, boxWidth, boxHeight, "F");
+
+  pdf.setLineWidth(1.2);
+  pdf.rect(20, y, boxWidth - 10, boxHeight, "FD");
   pdf.setFont(undefined, "bold");
-  pdf.setTextColor(0, 0, 0);
-  pdf.text(`Screening Result: ${status}`, 20, y + 1);
-  y += 15;
-  pdf.setTextColor(0, 0, 0);
+  pdf.setTextColor(0,0,0);
+  pdf.text(`Screening Result: ${status}`, 25, y + 8);
+  y += 18;
 
   // Clinical presentation
   /*if (step1Symptoms.length > 0) {
