@@ -789,7 +789,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("Guardian Contact:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(guardiancontact, 60, y);
-  y += 25;
+  y += 15;
 
   // SECTION 1: INITIAL SCREENING
   pdf.setFontSize(14);
