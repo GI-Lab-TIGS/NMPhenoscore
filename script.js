@@ -792,9 +792,10 @@ async function generateFinalNMPhenoscorePDF() {
   y += 15;
 
   // SECTION 1: INITIAL SCREENING
-  pdf.setFontSize(14);
+  pdf.setFontSize(13);
   pdf.setFont(undefined, "bold");
-  pdf.text("1. Initial NMGD Screening", 15, y);
+  pdf.setTextColor(43, 140, 238);
+  pdf.text("1. Initial NMGD Screening", 20, y);
   y += 8;
   pdf.setFontSize(11);
   pdf.setFont(undefined, "normal");
@@ -826,7 +827,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFont(undefined, "bold");
   pdf.setTextColor(0, 0, 0);
   pdf.text(`Screening Result: ${status}`, 20, y + 1);
-  y += 10;
+  y += 15;
   pdf.setTextColor(0, 0, 0);
 
   // Clinical presentation
