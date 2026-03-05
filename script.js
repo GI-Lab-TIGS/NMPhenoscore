@@ -745,49 +745,50 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("Patient Name:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(patientName, 60, y);
-  
+
   pdf.setFont(undefined, 'bold');
-  pdf.text("Age:", 120, y);
+  pdf.text("Clinician:", 120, y);
   pdf.setFont(undefined, 'normal');
-  pdf.text(`${patientAge} years`, 135, y);
+  pdf.text(clinician, 155, y);
   y += 7;
-  
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Age:", 25, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(`${patientAge} years`, 60, y);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Clinician Contact:", 120, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(cliniciancontact, 155, y);
+  y += 7;
+
   pdf.setFont(undefined, 'bold');
   pdf.text("Contact:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(patientContact, 60, y);
 
   pdf.setFont(undefined, 'bold');
-  pdf.text("Guardian:", 25, y);
-  pdf.setFont(undefined, 'bold');
-  pdf.text(guardian, 60, y);
+  pdf.text("Clinic Name:", 120, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(clinic, 155, y);
   y += 7;
 
   pdf.setFont(undefined, 'bold');
-  pdf.text("Gurdian Contact:", 25, y);
-  pdf.setFont(undefined, 'bold');
-  pdf.text(guardiancontact, 60, y);
+  pdf.text("Guardian:", 25, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(guardian, 60, y);
 
-  pdf.setFont(undefined, 'bold');
-  pdf.text("Clinician:", 25, y);
-  pdf.setFont(undefined, 'bold');
-  pdf.text(clinician, 60, y);
-  y +=7;
-
-  pdf.setFont(undefined, 'bold');
-  pdf.text("Clinician Contact:", 25, y);
-  pdf.setFont(undefined, 'bold');
-  pdf.text(cliniciancontact, 60, y);
-
-  pdf.setFont(undefined, 'bold');
-  pdf.text("Clinic Name:", 25, y);
-  pdf.setFont(undefined, 'bold');
-  pdf.text(clinic, 60, y);
-  
   pdf.setFont(undefined, 'bold');
   pdf.text("Report Date:", 120, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(new Date().toLocaleDateString('en-GB'), 155, y);
+  y += 7;
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Guardian Contact:", 25, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(guardiancontact, 60, y);
   y += 25;
 
   // SECTION 1: INITIAL SCREENING
