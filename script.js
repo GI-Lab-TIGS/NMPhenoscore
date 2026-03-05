@@ -730,7 +730,7 @@ async function generateFinalNMPhenoscorePDF() {
 
   // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
-  pdf.rect(20, y, 170, 45, 'F');
+  pdf.rect(20, y, 170, 55, 'F');
   
   pdf.setFontSize(11);
   pdf.setFont(undefined, 'bold');
@@ -821,7 +821,7 @@ async function generateFinalNMPhenoscorePDF() {
     pdf.text("No symptoms reported in initial screening.", 20, y);
     y += 6;
   }
-  y += 2;
+  //y += 2;
 
   let boxWidth = 170;
   let boxHeight = 12;
