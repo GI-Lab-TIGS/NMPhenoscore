@@ -730,7 +730,7 @@ async function generateFinalNMPhenoscorePDF() {
 
   // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
-  pdf.rect(20, y, 170, 55, 'F');
+  pdf.rect(20, y, 170, 45, 'F');
   
   pdf.setFontSize(11);
   pdf.setFont(undefined, 'bold');
@@ -839,7 +839,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFont(undefined, "bold");
   pdf.setTextColor(0,0,0);
   pdf.text(`Screening Result: ${status}`, 25, y + 8);
-  y += 18;
+  y += 20;
 
   // Clinical presentation
   /*if (step1Symptoms.length > 0) {
