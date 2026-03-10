@@ -563,55 +563,6 @@ analyzeBtn.addEventListener('click', async () => {
         if (data.top_condition) {
             const topCondition = data.top_condition;
             const matchedSymptoms = data.matched_symptoms[topCondition] || [];
-            const selectedSymptoms = symptoms || [];
-            const combinedSymptoms = [...new Set([...matchedSymptoms, ...selectedSymptoms])];
-            const hpoTerms = combinedSymptoms.map(sym => {
-                let hpo = "";
-                // check prevalence.json
-                const full = symptomMapping[sym.toLowerCase().trim()];
-                if (full) {
-                    const match = full.match(/\(HP:\d+\)/);
-                    if (match) {
-                        hpo = match[0].replace(/[()]/g, '');
-                    }
-                }
-                // check hpo_terms.json
-                if (!hpo && hpoLookup[sym.toLowerCase().trim()]) {
-                    hpo = hpoLookup[sym.toLowerCase().trim()];
-                }
-                return {
-                    Symptom: sym,
-                    HPO_ID: hpo
-                };
-            }).filter(row => row.HPO_ID !== "");
-            if (hpoTerms.length > 0) {
-                const hpoHtml = `
-                    <div class="hpo-section">
-                        <h3>HPO Terms for ${topCondition}:</h3>
-                        <table class="hpo-table">
-                            <tr><th>Symptom</th><th>HPO ID</th></tr>
-                            ${hpoTerms.map(r => `<tr><td>${r.Symptom}</td><td>${r.HPO_ID}</td></tr>`).join('')}
-                        </table>
-                        <button id="downloadHpoBtn" class="download-btn">Download HPO Excel</button>
-                    </div>
-                `;
-                resultsDiv.querySelector('.results-content')
-                    .insertAdjacentHTML('beforeend', hpoHtml);
-                document.getElementById('downloadHpoBtn')
-                    .addEventListener('click', () => {
-                        const wsData = [["Symptom", "HPO_ID"],
-                            ...hpoTerms.map(r => [r.Symptom, r.HPO_ID])
-                        ];
-                        const wb = XLSX.utils.book_new();
-                        const ws = XLSX.utils.aoa_to_sheet(wsData);
-                        XLSX.utils.book_append_sheet(wb, ws, "HPO_Terms");
-                        XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
-                });
-            }
-        }
-        /*if (data.top_condition) {
-            const topCondition = data.top_condition;
-            const matchedSymptoms = data.matched_symptoms[topCondition] || [];
 
             const hpoTerms = symptomConditionDf.symptoms
                 .filter(sym => matchedSymptoms.some(ms => sym.toLowerCase().includes(ms.toLowerCase())))
@@ -643,7 +594,7 @@ analyzeBtn.addEventListener('click', async () => {
                     XLSX.writeFile(wb, `${topCondition.replace(/\s+/g, '_')}_HPO_Terms.xlsx`);
                 });
             }
-        }*/
+        }
 
     } catch (error) {
         resultsDiv.innerHTML = `<div class="error"><p>Error: ${error.message}. Ensure the data files are available.</p></div>`;
