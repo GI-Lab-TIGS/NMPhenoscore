@@ -528,6 +528,43 @@
             gap: 120px;
             font-weight: 550;
         }
+        /* MOBILE VIEW */
+        @media screen and (max-width: 768px) {
+
+        /* patient profile card */
+        #patient-profile div{
+            width: 92% !important;
+            padding: 25px !important;
+        }
+
+        /* question cards */
+        .question-card{
+            padding:15px;
+        }
+
+        .question-card p{
+            font-size:14px;
+        }
+
+        /* yes/no buttons */
+        .question-options{
+            gap:30px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+
+        /* action buttons */
+        .action-button{
+            width:90%;
+            font-size:14px;
+            padding:12px;
+        }
+
+        #clinical-note-button{
+            width:90% !important;
+        }
+
+        }
 
     </style>
 </head>
@@ -539,11 +576,11 @@
 
     <div id="patient-profile" class="main-container patient-center">
         <div style="
-            max-width: 1000px;
+            max-width: 600px;
             width: 40%;
             margin: 0 auto;
             background: #ffffff;
-            padding: 80px;
+            padding: 60px;
             border-radius: 20px;
             box-shadow: var(--card-shadow);
             border: 1px solid #e5e7eb;
