@@ -114,68 +114,67 @@
 .remove-btn:hover {
   background: #dc2626;
 }
-        /* =========================
-   TABLET VIEW
-   ========================= */
-@media screen and (max-width: 1024px) {
-
-    .main-container{
-        flex-direction: column;
-        gap:20px;
+       /* =========================
+       TABLET VIEW
+       ========================= */
+    @media screen and (max-width: 1024px) {
+    
+        .main-container{
+            flex-direction: column;
+            gap:20px;
+        }
+    
+        .left-panel,
+        .right-panel{
+            max-height: none;
+            width:100%;
+        }
+    
     }
-
-    .left-panel,
-    .right-panel{
-        max-height: none;
-        width:100%;
+    
+    
+    /* =========================
+       MOBILE VIEW
+       ========================= */
+    @media screen and (max-width: 600px) {
+    
+        .header h1{
+            font-size:1.6rem;
+        }
+    
+        .header p{
+            font-size:0.9rem;
+        }
+    
+        .symptom-input{
+            flex-direction:column;
+            gap:10px;
+        }
+    
+        .symptom-input input{
+            border-radius:8px;
+        }
+    
+        .symptom-input button{
+            border-radius:8px;
+            width:100%;
+        }
+    
+        .common-symptoms-grid{
+            grid-template-columns:1fr;
+        }
+    
+        .download-pdf-btn{
+            width:100%;
+            font-size:16px;
+            padding:14px;
+        }
+    
+        .patient-info-grid{
+            grid-template-columns:1fr;
+        }
+    
     }
-
-}
-
-
-/* =========================
-   MOBILE VIEW
-   ========================= */
-@media screen and (max-width: 600px) {
-
-    .header h1{
-        font-size:1.6rem;
-    }
-
-    .header p{
-        font-size:0.9rem;
-    }
-
-    .symptom-input{
-        flex-direction:column;
-        gap:10px;
-    }
-
-    .symptom-input input{
-        border-radius:8px;
-    }
-
-    .symptom-input button{
-        border-radius:8px;
-        width:100%;
-    }
-
-    .common-symptoms-grid{
-        grid-template-columns:1fr;
-    }
-
-    .download-pdf-btn{
-        width:100%;
-        font-size:16px;
-        padding:14px;
-    }
-
-    .patient-info-grid{
-        grid-template-columns:1fr;
-    }
-
-}
-
     </style>
 </head>
 <body>
