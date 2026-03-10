@@ -522,13 +522,93 @@
             line-height: 1.5;
         }
 
-        .question-options {
-            display: flex;
-            justify-content: center;
-            gap: 120px;
-            font-weight: 550;
-        }
+        /* QUESTION OPTIONS FIX */
+.question-options {
+    display:flex;
+    justify-content:center;
+    gap:40px;
+    font-weight:550;
+    flex-wrap:wrap;
+}
+/* ---------------- MOBILE ---------------- */
+@media screen and (max-width: 600px) {
 
+  #patient-profile div{
+      width:95% !important;
+      padding:25px !important;
+  }
+
+  #app-banner h1{
+      font-size:1.5rem;
+  }
+
+  #app-banner p{
+      font-size:0.9rem;
+  }
+
+  .question-cards{
+      padding-left:10px;
+      padding-right:10px;
+  }
+
+  .question-card{
+      padding:14px;
+      margin-top:10px;
+  }
+
+  .question-card p{
+      font-size:14px;
+  }
+
+  .question-options{
+      gap:25px;
+  }
+
+  .action-button{
+      width:95%;
+      font-size:14px;
+      padding:12px;
+  }
+
+  #clinical-note-button{
+      width:95% !important;
+  }
+
+}
+/* ---------------- TABLET ---------------- */
+@media screen and (min-width: 601px) and (max-width: 1024px) {
+
+  #patient-profile div{
+      width:60% !important;
+      padding:40px !important;
+  }
+
+  .question-card{
+      padding:18px;
+  }
+
+  .question-options{
+      gap:50px;
+  }
+
+  .action-button{
+      width:60%;
+  }
+
+  #clinical-note-button{
+      width:60% !important;
+  }
+
+}
+/* ---------------- DESKTOP ---------------- */
+@media screen and (min-width: 1025px) {
+
+  #patient-profile div{
+      width:40%;
+      padding:80px;
+  }
+
+}
     </style>
 </head>
 <body>
@@ -818,3 +898,4 @@
 </script>
 </body>
 </html>
+
