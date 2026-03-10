@@ -135,6 +135,57 @@ function prioritizeConditions(symptomsList, symptomConditionDf, symptomMapping) 
 // Load and preprocess data from JSON
 async function loadData() {
     try {
+
+        // Load prevalence data
+        const response = await fetch('prevalence.json');
+        if (!response.ok) throw new Error('Failed to fetch prevalence.json');
+
+        const json = await response.json();
+
+        symptomConditionDf = json;
+        allSymptoms = json.symptoms;
+
+        symptomMapping = {};
+        for (const full of allSymptoms) {
+            const simple = extractSymptomName(full);
+            const key = simple.toLowerCase();
+            if (!symptomMapping.hasOwnProperty(key)) {
+                symptomMapping[key] = full;
+            }
+        }
+
+        // Load condition URLs
+        const urlResponse = await fetch('conditions_gene_data.json');
+        if (urlResponse.ok) {
+            conditionUrls = await urlResponse.json();
+        } else {
+            console.warn('conditions_gene_data.json not found');
+        }
+
+        // Load HPO terms
+        const hpoResponse = await fetch('hpo_terms.json');
+        if (hpoResponse.ok) {
+            const hpoJson = await hpoResponse.json();
+            hpoLookup = {};
+            hpoTerms = [];
+            Object.entries(hpoJson).forEach(([term, id]) => {
+                const cleanID = id.replace("_", ":"); // HP_0001324 → HP:0001324
+                hpoLookup[term.toLowerCase()] = cleanID;
+                hpoTerms.push(term);
+            });
+            console.log("HPO terms loaded:", hpoTerms.length);
+        } else {
+            console.warn("hpo_terms.json not found");
+        }
+        console.log('All data loaded successfully');
+        return true;
+    } catch (e) {
+        console.error(`Error loading data: ${e}`);
+        return false;
+    }
+}
+/*async function loadData() {
+    try {
         const response = await fetch('prevalence.json');
         if (!response.ok) throw new Error('Failed to fetch prevalence.json');
         const json = await response.json();
@@ -158,32 +209,10 @@ async function loadData() {
         console.error(`Error loading file: ${e}`);
         return false;
     }
-
-    // Load HPO terms
-    try {
-        const hpoResponse = await fetch('hpo_terms.json');
-
-        if (hpoResponse.ok) {
-            const hpoJson = await hpoResponse.json();
-            hpoLookup = {};
-            hpoTerms = [];
-
-            Object.entries(hpoJson).forEach(([term, id]) => {
-                const cleanID = id.replace("_", ":"); // convert HP_0001324 -> HP:0001324
-                hpoLookup[term.toLowerCase()] = cleanID;
-                hpoTerms.push(term);
-            });
-            console.log("HPO terms loaded:", hpoTerms.length);
-        } else {
-            console.warn("hpo_terms.json not found");
-        }
-    } catch (e) {
-        console.warn("Failed to load hpo_terms.json", e);
-    }
 }
 
 // Fetch all possible symptoms for autocomplete
-/*async function fetchAllSymptoms() {
+async function fetchAllSymptoms() {
     if (!symptomConditionDf) { console.error('Data not loaded'); return; }
     const simpleSymptoms = allSymptoms.map(extractSymptomName);
     const uniqueSorted = [...new Set(simpleSymptoms)].sort();
