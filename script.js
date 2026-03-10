@@ -395,7 +395,8 @@ analyzeBtn.addEventListener('click', async () => {
           const selectedSymptomsWithHPO = symptoms.map(sym => {
           let hpo = "N/A";
           // check prevalence.json first
-          const full = symptomMapping[sym.toLowerCase()];
+          //const full = symptomMapping[sym.toLowerCase()];
+          const full = symptomMapping[sym.toLowerCase().trim()];
           if (full) {
               const match = full.match(/\(HP:\d+\)/);
               if (match) {
@@ -403,7 +404,7 @@ analyzeBtn.addEventListener('click', async () => {
               }
           }
           // check hpo_terms.json
-          if (hpo === "N/A" && hpoLookup[sym.toLowerCase()]) {
+          if (hpo === "N/A" && hpoLookup[sym.toLowerCase().trim()]) {
               hpo = hpoLookup[sym.toLowerCase()];
           }
           return {
