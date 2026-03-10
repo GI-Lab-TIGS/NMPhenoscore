@@ -169,7 +169,7 @@ async function loadData() {
             hpoLookup = {};
             hpoTerms = [];
             Object.entries(hpoJson).forEach(([term, id]) => {
-                const cleanID = id.replace("_", ":"); // HP_0001324 → HP:0001324
+                const cleanID = id.replace("_", ":"); 
                 hpoLookup[term.toLowerCase()] = cleanID;
                 hpoTerms.push(term);
             });
