@@ -9,6 +9,8 @@ let allSymptoms = [];
 let symptomMapping = {};
 let conditionUrls = {};
 let uploadedItems = [];
+let hpoTerms = [];
+let hpoLookup = {};
 
 // Configure PDF.js worker
 if (typeof pdfjsLib !== 'undefined') {
@@ -156,14 +158,55 @@ async function loadData() {
         console.error(`Error loading file: ${e}`);
         return false;
     }
+
+    // Load HPO terms
+    try {
+        const hpoResponse = await fetch('hpo_terms.json');
+
+        if (hpoResponse.ok) {
+            const hpoJson = await hpoResponse.json();
+            hpoLookup = {};
+            hpoTerms = [];
+
+            Object.entries(hpoJson).forEach(([term, id]) => {
+                const cleanID = id.replace("_", ":"); // convert HP_0001324 -> HP:0001324
+                hpoLookup[term.toLowerCase()] = cleanID;
+                hpoTerms.push(term);
+            });
+            console.log("HPO terms loaded:", hpoTerms.length);
+        } else {
+            console.warn("hpo_terms.json not found");
+        }
+    } catch (e) {
+        console.warn("Failed to load hpo_terms.json", e);
+    }
 }
 
 // Fetch all possible symptoms for autocomplete
-async function fetchAllSymptoms() {
+/*async function fetchAllSymptoms() {
     if (!symptomConditionDf) { console.error('Data not loaded'); return; }
     const simpleSymptoms = allSymptoms.map(extractSymptomName);
     const uniqueSorted = [...new Set(simpleSymptoms)].sort();
     const datalist = document.getElementById('symptomSuggestions');
+    uniqueSorted.forEach(sym => {
+        const option = document.createElement('option');
+        option.value = sym;
+        datalist.appendChild(option);
+    });
+}*/
+async function fetchAllSymptoms() {
+    if (!symptomConditionDf) {
+        console.error('Data not loaded');
+        return;
+    }
+    // symptoms from prevalence.json
+    const prevalenceSymptoms = allSymptoms.map(extractSymptomName);
+    // combine with HPO terms
+    const combinedSymptoms = [...prevalenceSymptoms, ...hpoTerms];
+    // remove duplicates
+    const uniqueSorted = [...new Set(combinedSymptoms)].sort();
+    const datalist = document.getElementById('symptomSuggestions');
+    datalist.innerHTML = "";
     uniqueSorted.forEach(sym => {
         const option = document.createElement('option');
         option.value = sym;
@@ -302,8 +345,9 @@ analyzeBtn.addEventListener('click', async () => {
         // Store step 2 results for PDF
         localStorage.setItem("step2TopCondition", top_condition || "N/A");
         localStorage.setItem("step2SelectedSymptoms", JSON.stringify(symptoms));
-        // Save HPO terms for selected symptoms (FIXED VERSION)
-        const selectedSymptomsWithHPO = symptoms.map(sym => {
+
+        // Save HPO terms for selected symptoms
+        /*const selectedSymptomsWithHPO = symptoms.map(sym => {
           const full = symptomMapping[sym.toLowerCase()];
           let hpo = "N/A";
 
@@ -318,9 +362,27 @@ analyzeBtn.addEventListener('click', async () => {
             symptom: sym,
             hpo: hpo
           };
-        });
-        localStorage.setItem("step2SelectedSymptomsHPO", JSON.stringify(selectedSymptomsWithHPO));
-
+        });*/
+          const selectedSymptomsWithHPO = symptoms.map(sym => {
+          let hpo = "N/A";
+          // check prevalence.json first
+          const full = symptomMapping[sym.toLowerCase()];
+          if (full) {
+              const match = full.match(/\(HP:\d+\)/);
+              if (match) {
+                  hpo = match[0].replace(/[()]/g, "");
+              }
+          }
+          // check hpo_terms.json
+          if (hpo === "N/A" && hpoLookup[sym.toLowerCase()]) {
+              hpo = hpoLookup[sym.toLowerCase()];
+          }
+          return {
+              symptom: sym,
+              hpo: hpo
+          };
+      });
+      localStorage.setItem("step2SelectedSymptomsHPO", JSON.stringify(selectedSymptomsWithHPO));
         const step2Matched = [];
         if (top_condition && matched_symptoms[top_condition]) {
             matched_symptoms[top_condition].forEach(sym => {
