@@ -1044,7 +1044,7 @@ async function generateFinalNMPhenoscorePDF() {
   // --- MATCHED CLINICAL FEATURES ---
   pdf.setFontSize(10);
   pdf.setFont(undefined, 'bold');
-  pdf.text("Matched Clinical Features:", 25, y);
+  pdf.text("Matched Clinical Features for the Primary Recommended Condition", 25, y);
   y += 6;
 
   pdf.setFont(undefined, 'normal');
