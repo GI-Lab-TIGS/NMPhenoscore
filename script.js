@@ -877,24 +877,24 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text("Consanguinity:", 120, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(consanguinity, 155, y);
+  y += 7;
   
   pdf.setFont(undefined, 'bold');
   pdf.text("Guardian Contact:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(guardiancontact, 60, y);
-  y += 15;
-
+  
   pdf.setFont(undefined, 'bold');
   pdf.text("Affected Individual:", 120, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(affectedindividual, 155, y);
-  y += 15;
+  y += 7;
 
   pdf.setFont(undefined, 'bold');
   pdf.text("Report Date:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(new Date().toLocaleDateString('en-GB'), 60, y);
-  y += 7;
+  y += 15;
 
   // SECTION 1: INITIAL SCREENING
   pdf.setFontSize(13);
