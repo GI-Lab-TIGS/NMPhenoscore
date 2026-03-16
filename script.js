@@ -782,8 +782,8 @@ async function generateFinalNMPhenoscorePDF() {
   const clinician = localStorage.getItem("clinicianName") || "N/A";
   const cliniciancontact = localStorage.getItem("clinicianContact") || "N/A";
   const clinic = localStorage.getItem("clinicName") || "N/A";
-  const consanguinity = localStorage.setItem("consanguineous") || "N/A";
-  const affectedindividual = localStorage.setItem("affectedFamily") || "N/A";
+  const consanguinity = localStorage.getItem("consanguineous") || "N/A";
+  const affectedindividual = localStorage.getItem("affectedFamily") || "N/A";
   //const score = localStorage.getItem("step1Score") || "0%";
   //const status = localStorage.getItem("step1Status") || "N/A";
   //const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
