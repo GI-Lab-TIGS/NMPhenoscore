@@ -824,7 +824,7 @@ async function generateFinalNMPhenoscorePDF() {
 
   // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
-  pdf.rect(20, y, 170, 60, 'F');
+  pdf.rect(20, y, 170, 50, 'F');
   
   pdf.setFontSize(11);
   pdf.setFont(undefined, 'bold');
@@ -891,7 +891,7 @@ async function generateFinalNMPhenoscorePDF() {
   y += 7;
 
   pdf.setFont(undefined, 'bold');
-  pdf.text("Affected with similar clinical features in the family :", 25, y);
+  pdf.text("Affected with similar clinical features in the family:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(affectedindividual, 60, y); 
   y += 15;
