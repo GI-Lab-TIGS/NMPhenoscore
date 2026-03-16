@@ -891,7 +891,7 @@ async function generateFinalNMPhenoscorePDF() {
   y += 7;
 
   pdf.setFont(undefined, 'bold');
-  pdf.text("Affected with similar clinical features in the family:", 25, y);
+  pdf.text("Affected family history:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(affectedindividual, 60, y); 
   y += 15;
