@@ -824,7 +824,7 @@ async function generateFinalNMPhenoscorePDF() {
 
   // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
-  pdf.rect(20, y, 170, 50, 'F');
+  pdf.rect(20, y, 170, 55, 'F');
   
   pdf.setFontSize(11);
   pdf.setFont(undefined, 'bold');
@@ -893,7 +893,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFont(undefined, 'bold');
   pdf.text("Affected family history:", 25, y);
   pdf.setFont(undefined, 'normal');
-  pdf.text(affectedindividual, 100, y); 
+  pdf.text(affectedindividual, 80, y); 
   y += 15;
 
   // SECTION 1: INITIAL SCREENING
