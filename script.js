@@ -824,6 +824,83 @@ async function generateFinalNMPhenoscorePDF() {
 
   // PATIENT INFORMATION BOX
   pdf.setFillColor(245, 247, 250);
+  pdf.rect(20, y, 170, 50, 'F');
+
+  pdf.setFontSize(11);
+  pdf.setFont(undefined, 'bold');
+  pdf.setTextColor(0, 0, 0);
+  pdf.text("PATIENT INFORMATION", 25, y + 6);
+  pdf.setFontSize(10);
+  let rowY = y + 14;
+  const rowGap = 7;
+
+  // Row 1
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Patient Name:", 25, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(patientName, 60, rowY);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Clinician:", 110, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(clinician, 150, rowY);
+  rowY += rowGap;
+
+  // Row 2
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Age:", 25, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(`${patientAge} years`, 60, rowY);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Clinician Contact:", 110, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(cliniciancontact, 150, rowY);
+  rowY += rowGap;
+
+  // Row 3
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Contact:", 25, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(patientContact, 60, rowY);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Clinic Name:", 110, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(clinic, 150, rowY);
+  rowY += rowGap;
+
+  // Row 4
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Guardian:", 25, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(guardian, 60, rowY);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Consanguinity:", 110, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(consanguinity, 150, rowY);
+  rowY += rowGap;
+
+  // Row 5
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Guardian Contact:", 25, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(guardiancontact, 60, rowY);
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Affected Individual:", 110, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(affectedindividual, 150, rowY);
+  rowY += rowGap + 3;
+
+  // Report Date
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Report Date:", 25, rowY);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(new Date().toLocaleDateString('en-GB'), 60, rowY);
+  y = rowY + 10;
+  /*pdf.setFillColor(245, 247, 250);
   pdf.rect(20, y, 170, 45, 'F');
   
   pdf.setFontSize(11);
@@ -887,14 +964,14 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFont(undefined, 'bold');
   pdf.text("Affected Individual:", 120, y);
   pdf.setFont(undefined, 'normal');
-  pdf.text(guardiancontact, 155, y);
+  pdf.text(affectedindividual, 155, y);
   y += 15;
 
   pdf.setFont(undefined, 'bold');
   pdf.text("Report Date:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(new Date().toLocaleDateString('en-GB'), 60, y);
-  y += 7;
+  y += 7;*/
 
   // SECTION 1: INITIAL SCREENING
   pdf.setFontSize(13);
