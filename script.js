@@ -782,6 +782,8 @@ async function generateFinalNMPhenoscorePDF() {
   const clinician = localStorage.getItem("clinicianName") || "N/A";
   const cliniciancontact = localStorage.getItem("clinicianContact") || "N/A";
   const clinic = localStorage.getItem("clinicName") || "N/A";
+  const consanguinity = localStorage.setItem("consanguineous") || "N/A";
+  const affectedindividual = localStorage.setItem("affectedFamily") || "N/A";
   //const score = localStorage.getItem("step1Score") || "0%";
   //const status = localStorage.getItem("step1Status") || "N/A";
   //const step1Symptoms = JSON.parse(localStorage.getItem("step1Symptoms") || "[]");
@@ -872,16 +874,27 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text(guardian, 60, y);
 
   pdf.setFont(undefined, 'bold');
-  pdf.text("Report Date:", 120, y);
+  pdf.text("Consanguinity:", 120, y);
   pdf.setFont(undefined, 'normal');
-  pdf.text(new Date().toLocaleDateString('en-GB'), 155, y);
-  y += 7;
-
+  pdf.text(consanguinity, 155, y);
+  
   pdf.setFont(undefined, 'bold');
   pdf.text("Guardian Contact:", 25, y);
   pdf.setFont(undefined, 'normal');
   pdf.text(guardiancontact, 60, y);
   y += 15;
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Affected Individual:", 120, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(guardiancontact, 155, y);
+  y += 15;
+
+  pdf.setFont(undefined, 'bold');
+  pdf.text("Report Date:", 25, y);
+  pdf.setFont(undefined, 'normal');
+  pdf.text(new Date().toLocaleDateString('en-GB'), 60, y);
+  y += 7;
 
   // SECTION 1: INITIAL SCREENING
   pdf.setFontSize(13);
@@ -1044,7 +1057,7 @@ async function generateFinalNMPhenoscorePDF() {
   // --- MATCHED CLINICAL FEATURES ---
   pdf.setFontSize(10);
   pdf.setFont(undefined, 'bold');
-  pdf.text("Matched Clinical Features for the Primary Recommended Condition", 25, y);
+  pdf.text("Matched Clinical Features for the Primary Recommended Condition:", 25, y);
   y += 6;
 
   pdf.setFont(undefined, 'normal');
