@@ -893,7 +893,7 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.setFont(undefined, 'bold');
   pdf.text("Affected family history:", 25, y);
   pdf.setFont(undefined, 'normal');
-  pdf.text(affectedindividual, 60, y); 
+  pdf.text(affectedindividual, 70, y); 
   y += 15;
 
   // SECTION 1: INITIAL SCREENING
