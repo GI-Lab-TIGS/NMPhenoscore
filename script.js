@@ -885,15 +885,15 @@ async function generateFinalNMPhenoscorePDF() {
   pdf.text(guardiancontact, 60, y);
   
   pdf.setFont(undefined, 'bold');
-  pdf.text("Affected with similar clinical features in the family :", 120, y);
+  pdf.text("Report Date:", 120, y);
   pdf.setFont(undefined, 'normal');
-  pdf.text(affectedindividual, 155, y);
+  pdf.text(new Date().toLocaleDateString('en-GB'), 155, y);
   y += 7;
 
   pdf.setFont(undefined, 'bold');
-  pdf.text("Report Date:", 25, y);
+  pdf.text("Affected with similar clinical features in the family :", 25, y);
   pdf.setFont(undefined, 'normal');
-  pdf.text(new Date().toLocaleDateString('en-GB'), 60, y);
+  pdf.text(affectedindividual, 60, y); 
   y += 15;
 
   // SECTION 1: INITIAL SCREENING
