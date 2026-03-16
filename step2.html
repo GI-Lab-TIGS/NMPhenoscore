@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,98 +86,99 @@
         }
 
         .file-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  margin-bottom: 6px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #f9fafb;
-}
-
-.file-name {
-  font-size: 14px;
-  color: #333;
-  word-break: break-all;
-}
-
-.remove-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.remove-btn:hover {
-  background: #dc2626;
-}
-       /* =========================
-       TABLET VIEW
-       ========================= */
-    @media screen and (max-width: 1024px) {
-    
-        .main-container{
-            flex-direction: column;
-            gap:20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f9fafb;
         }
-    
-        .left-panel,
-        .right-panel{
-            max-height: none;
-            width:100%;
+
+        .file-name {
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
         }
-    
+
+        .remove-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-btn:hover {
+            background: #dc2626;
+        }
+        /* =========================
+        TABLET VIEW
+        ========================= */
+        @media screen and (max-width: 1024px) {
+
+            .main-container{
+                flex-direction: column;
+                gap:20px;
+            }
+
+            .left-panel,
+            .right-panel{
+                max-height: none;
+                width:100%;
+            }
+
+        }
+
+
+/* =========================
+   MOBILE VIEW
+   ========================= */
+@media screen and (max-width: 600px) {
+
+    .header h1{
+        font-size:1.6rem;
     }
-    
-    
-    /* =========================
-       MOBILE VIEW
-       ========================= */
-    @media screen and (max-width: 600px) {
-    
-        .header h1{
-            font-size:1.6rem;
-        }
-    
-        .header p{
-            font-size:0.9rem;
-        }
-    
-        .symptom-input{
-            flex-direction:column;
-            gap:10px;
-        }
-    
-        .symptom-input input{
-            border-radius:8px;
-        }
-    
-        .symptom-input button{
-            border-radius:8px;
-            width:100%;
-        }
-    
-        .common-symptoms-grid{
-            grid-template-columns:1fr;
-        }
-    
-        .download-pdf-btn{
-            width:100%;
-            font-size:16px;
-            padding:14px;
-        }
-    
-        .patient-info-grid{
-            grid-template-columns:1fr;
-        }
-    
+
+    .header p{
+        font-size:0.9rem;
     }
+
+    .symptom-input{
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .symptom-input input{
+        border-radius:8px;
+    }
+
+    .symptom-input button{
+        border-radius:8px;
+        width:100%;
+    }
+
+    .common-symptoms-grid{
+        grid-template-columns:1fr;
+    }
+
+    .download-pdf-btn{
+        width:100%;
+        font-size:16px;
+        padding:14px;
+    }
+
+    .patient-info-grid{
+        grid-template-columns:1fr;
+    }
+
+}
     </style>
 </head>
+
 <body>
     <div class="app">
         <header class="header">
@@ -188,7 +190,7 @@
             </div>
         </header>
 
-        <div class="main-container">      
+        <div class="main-container">
             <div class="left-panel">
                 <div class="panel-header">
                     <h2><i class="fas fa-notes-medical"></i> Enter Patient Symptoms</h2>
@@ -196,7 +198,9 @@
                 </div>
 
                 <div class="symptom-input">
-                    <input type="text" id="symptomInput" placeholder="Type a symptom (e.g., muscle weakness, fever, headache.)" list="symptomSuggestions">
+                    <input type="text" id="symptomInput"
+                        placeholder="Type a symptom (e.g., muscle weakness, fever, headache.)"
+                        list="symptomSuggestions">
                     <datalist id="symptomSuggestions"></datalist>
                     <button type="button" id="addBtn"><i class="fas fa-plus"></i></button>
                 </div>
@@ -210,20 +214,33 @@
                 <div class="common-symptoms">
                     <h3>Quick Add Common Symptoms:</h3>
                     <div class="common-symptoms-grid">
-                        <button type="button" data-symptom="Pyloric atresia"><i class="fas fa-plus"></i> Pyloric atresia</button>
-                        <button type="button" data-symptom="Retinopathy"><i class="fas fa-plus"></i> Retinopathy</button>
-                        <button type="button" data-symptom="Rippling muscles"><i class="fas fa-plus"></i> Rippling muscles</button>
-                        <button type="button" data-symptom="Hyperreflexia"><i class="fas fa-plus"></i> Hyperreflexia</button>
-                        <button type="button" data-symptom="Polyhill sign"><i class="fas fa-plus"></i> Polyhill sign</button>
-                        <button type="button" data-symptom="Hypogonadism"><i class="fas fa-plus"></i> Hypogonadism</button>
-                        <button type="button" data-symptom="Muscle weakness"><i class="fas fa-plus"></i> Muscle weakness</button>
-                        <button type="button" data-symptom="Progressive muscle degeneration"><i class="fas fa-plus"></i> Progressive muscle degeneration</button>
-                        <button type="button" data-symptom="Elevated creatinine phosphokinase"><i class="fas fa-plus"></i> Elevated creatinine phosphokinase</button>
+                        <button type="button" data-symptom="Pyloric atresia"><i class="fas fa-plus"></i> Pyloric
+                            atresia</button>
+                        <button type="button" data-symptom="Retinopathy"><i class="fas fa-plus"></i>
+                            Retinopathy</button>
+                        <button type="button" data-symptom="Rippling muscles"><i class="fas fa-plus"></i> Rippling
+                            muscles</button>
+                        <button type="button" data-symptom="Hyperreflexia"><i class="fas fa-plus"></i>
+                            Hyperreflexia</button>
+                        <button type="button" data-symptom="Polyhill sign"><i class="fas fa-plus"></i> Polyhill
+                            sign</button>
+                        <button type="button" data-symptom="Hypogonadism"><i class="fas fa-plus"></i>
+                            Hypogonadism</button>
+                        <button type="button" data-symptom="Muscle weakness"><i class="fas fa-plus"></i> Muscle
+                            weakness</button>
+                        <button type="button" data-symptom="Progressive muscle degeneration"><i class="fas fa-plus"></i>
+                            Progressive muscle degeneration</button>
+                        <button type="button" data-symptom="Elevated creatinine phosphokinase"><i
+                                class="fas fa-plus"></i> Elevated creatinine phosphokinase</button>
                         <button type="button" data-symptom="Scoliosis"><i class="fas fa-plus"></i> Scoliosis</button>
-                        <button type="button" data-symptom="Joint contractures"><i class="fas fa-plus"></i> Joint contractures</button>
-                        <button type="button" data-symptom="Cardiac abnormalities"><i class="fas fa-plus"></i> Cardiac abnormalities</button>
-                        <button type="button" data-symptom="Respiratory failure"><i class="fas fa-plus"></i> Respiratory failure</button>
-                        <button type="button" data-symptom="Developmental delay"><i class="fas fa-plus"></i> Developmental delay</button>
+                        <button type="button" data-symptom="Joint contractures"><i class="fas fa-plus"></i> Joint
+                            contractures</button>
+                        <button type="button" data-symptom="Cardiac abnormalities"><i class="fas fa-plus"></i> Cardiac
+                            abnormalities</button>
+                        <button type="button" data-symptom="Respiratory failure"><i class="fas fa-plus"></i> Respiratory
+                            failure</button>
+                        <button type="button" data-symptom="Developmental delay"><i class="fas fa-plus"></i>
+                            Developmental delay</button>
                     </div>
                 </div>
 
@@ -240,25 +257,23 @@
                     <p>No analysis performed yet</p>
                     <p>Add symptoms and click "Analyze" to get started</p>
                 </div>
-                
+
                 <!-- OPTIONAL IMAGE UPLOAD -->
-                <div class="image-upload-section" style="margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-                    <h3 style="margin-bottom: 10px;"><i class="fas fa-images"></i> Upload Clinical Images (Optional)</h3>
+                <div class="image-upload-section"
+                    style="margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+                    <h3 style="margin-bottom: 10px;"><i class="fas fa-images"></i> Upload Clinical Images (Optional)
+                    </h3>
                     <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                        Upload pedigrees, reports, or clinical images. Images and PDF pages will be appended to the PDF report.
+                        Upload pedigrees, reports, or clinical images. Images and PDF pages will be appended to the PDF
+                        report.
                     </p>
-                    <input
-                        type="file"
-                        id="imageUpload"
-                        accept="image/*,application/pdf"
-                        multiple
-                        style="display: block; width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer;"
-                    />
+                    <input type="file" id="imageUpload" accept="image/*,application/pdf" multiple
+                        style="display: block; width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer;" />
                 </div>
 
                 <!-- PDF Download Button -->
                 <button id="downloadPdfBtn" class="download-pdf-btn" style="display: none;">
-                    📄 Download Full Report (PDF)
+                    Download Full Report (PDF)
                 </button>
             </div>
         </div>
@@ -266,10 +281,12 @@
 
         <div class="disclaimer">
             <span><i class="fas fa-exclamation-triangle"></i></span>
-            <p>Medical Disclaimer: This tool is for educational purposes only. Always consult with qualified healthcare professionals for proper medical diagnosis and treatment.</p>
+            <p>Medical Disclaimer: This tool is for educational purposes only. Always consult with qualified healthcare
+                professionals for proper medical diagnosis and treatment.</p>
         </div>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
