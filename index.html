@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+0<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -670,6 +670,14 @@
             <input id="clinicName" type="text" placeholder="Clinic name"
                 style="width: 100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
 
+            <label style="font-weight:600; margin-top:15px; display:block;">Are the parents consanguineous?</label>
+            <input id="consanguineous" type="text" placeholder="Consanguinity"
+                style="width: 100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
+            <label style="font-weight:600; margin-top:15px; display:block;">Is anyone affected in the family?</label>
+            <input id="affectedFamily" type="text" placeholder="Affected individual in the family"
+                style="width: 100%; padding:12px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color);">
+
             <button class="action-button" style="width:100%; margin-top:25px;"
                 onclick="launchTool()">
                 Launch Tool
@@ -853,8 +861,10 @@
         const clinician = document.getElementById("clinicianName").value.trim();
         const cliniciancontact = document.getElementById("clinicianContact").value.trim();
         const clinic = document.getElementById("clinicName").value.trim();
+        const consanguinity = document.getElementById("consanguineous").value.trim();
+        const affectedindividual = document.getElementById("affectedFamily").value.trim();
 
-        if (!name || !age || !contact || !guardian || !guardiancontact || !clinician || !cliniciancontact || !clinic) {
+        if (!name || !age || !contact || !guardian || !guardiancontact) {
             alert("Please fill all patient details.");
             return;
         }
@@ -864,9 +874,11 @@
         localStorage.setItem("patientContact", contact);
         localStorage.setItem("guardianName", guardian);
         localStorage.setItem("guardianContact", guardiancontact);
-        localStorage.setItem("clinicianName", clinician);
-        localStorage.setItem("clinicianContact", cliniciancontact);
-        localStorage.setItem("clinicName", clinic);
+        localStorage.setItem("clinicianName", clinician || "-");
+        localStorage.setItem("clinicianContact", cliniciancontact || "N/A");
+        localStorage.setItem("clinicName", clinic || "N/A");
+        localStorage.setItem("consanguineous", consanguinity || "N/A");
+        localStorage.setItem("affectedFamily", affectedindividual || "N/A");
 
         showTool();
     }
@@ -880,8 +892,10 @@
         const clinician = localStorage.getItem("clinicianName");
         const cliniciancontact = localStorage.getItem("clinicianContact");
         const clinic = localStorage.getItem("clinicName");
+        const consanguinity = localStorage.getItem("consanguineous");
+        const affectedindividual = localStorage.getItem("affectedFamily");
 
-        if (!name || !age || !contact || !guardian || !guardiancontact || !clinician || !cliniciancontact || !clinic) return;
+        if (!name || !age || !contact || !guardian || !guardiancontact) return;
 
         document.getElementById("patient-profile").style.display = "none";
         document.getElementById("tool-container").style.display = "block";
@@ -894,8 +908,9 @@
         document.getElementById("pClinician").textContent = clinician;
         document.getElementById("pClinicianContact").textContent = cliniciancontact;
         document.getElementById("pClinicName").textContent = clinic;
+        document.getElementById("pConsanguinity").textContent = consanguinity;
+        document.getElementById("pAffectedIndividual").textContent = affectedindividual;
     }
 </script>
 </body>
 </html>
-
